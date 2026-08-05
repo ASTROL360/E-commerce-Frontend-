@@ -1,33 +1,41 @@
-import { useState } from 'react';
-import { mockCategories, mockProducts } from '../../data/mockData';
+import { useState, useEffect } from 'react';
+import categoryService from '../../services/categoryService';
+import productService from '../../services/productService';
 
 export default function AdminCategories() {
-  const [categories, setCategories] = useState(mockCategories);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', description: '' });
+
+  const loadCategories = () => {
+    setLoading(true);
+    categoryService.getAll().then((res) => {
+      setCategories(res.data?.data || []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { loadCategories(); }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name) return;
-    setCategories((prev) => [...prev, { ...form, id: Date.now() }]);
-    setForm({ name: '', description: '' });
-    setShowForm(false);
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Delete this category?')) {
-      setCategories((prev) => prev.filter((c) => c.id !== id));
+    try {
+      await categoryService.create(form);
+      setForm({ name: '', description: '' });
+      setShowForm(false);
+      loadCategories();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to create category');
     }
   };
 
-  const productCount = (catId) => mockProducts.filter((p) => p.category?.id === catId).length;
-
   return (
-    <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
+    <div style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>Categories</h1>
         <button onClick={() => setShowForm(!showForm)} style={addBtn}>
@@ -49,30 +57,30 @@ export default function AdminCategories() {
         </form>
       )}
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
-        <thead>
-          <tr style={{ borderBottom: '2px solid #ddd', textAlign: 'left' }}>
-            <th style={thStyle}>ID</th>
-            <th style={thStyle}>Name</th>
-            <th style={thStyle}>Description</th>
-            <th style={thStyle}>Products</th>
-            <th style={thStyle}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map((c) => (
-            <tr key={c.id} style={{ borderBottom: '1px solid #eee' }}>
-              <td style={tdStyle}>{c.id}</td>
-              <td style={tdStyle}>{c.name}</td>
-              <td style={tdStyle}>{c.description || '-'}</td>
-              <td style={tdStyle}>{productCount(c.id)}</td>
-              <td style={tdStyle}>
-                <button onClick={() => handleDelete(c.id)} style={deleteBtn}>Delete</button>
-              </td>
+      {loading ? (
+        <p>Loading categories...</p>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid #ddd', textAlign: 'left' }}>
+              <th style={thStyle}>ID</th>
+              <th style={thStyle}>Name</th>
+              <th style={thStyle}>Description</th>
+              <th style={thStyle}>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {categories.map((c) => (
+              <tr key={c.id} style={{ borderBottom: '1px solid #eee' }}>
+                <td style={tdStyle}>{c.id}</td>
+                <td style={tdStyle}>{c.name}</td>
+                <td style={tdStyle}>{c.description || '-'}</td>
+                <td style={tdStyle}>-</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

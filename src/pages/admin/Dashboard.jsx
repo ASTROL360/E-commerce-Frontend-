@@ -1,29 +1,47 @@
-import { Link } from 'react-router-dom';
-import { mockProducts, mockOrders } from '../../data/mockData';
+import { useState, useEffect } from 'react';
+import productService from '../../services/productService';
+import orderService from '../../services/orderService';
+
+const statusColors = {
+  PENDING: '#f39c12',
+  PAID: '#3498db',
+  SHIPPED: '#9b59b6',
+  DELIVERED: '#27ae60',
+  CANCELLED: '#e74c3c',
+};
 
 export default function Dashboard() {
-  const totalRevenue = mockOrders
+  const [productCount, setProductCount] = useState(0);
+  const [orderCount, setOrderCount] = useState(0);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      productService.getAll({ page: 0, size: 1 }),
+      orderService.getAllOrders({ page: 0, size: 1000 }),
+    ]).then(([prodRes, orderRes]) => {
+      const page = orderRes.data?.data || {};
+      setProductCount(prodRes.data?.data?.totalElements || 0);
+      setOrderCount(page.totalElements || 0);
+      setOrders(page.content || []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const totalRevenue = orders
     .filter((o) => o.status === 'DELIVERED')
     .reduce((sum, o) => sum + Number(o.totalAmount), 0);
 
-  const recentOrders = mockOrders.slice(0, 5);
-
-  const statusColors = {
-    PENDING: '#f39c12',
-    PAID: '#3498db',
-    SHIPPED: '#9b59b6',
-    DELIVERED: '#27ae60',
-    CANCELLED: '#e74c3c',
-  };
+  if (loading) return <p>Loading dashboard...</p>;
 
   return (
-    <div style={{ maxWidth: 1000, margin: '2rem auto', padding: '0 1rem' }}>
+    <div style={{ padding: '2rem' }}>
       <h1>Admin Dashboard</h1>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
         {[
-          { label: 'Total Products', value: mockProducts.length, bg: '#667eea' },
-          { label: 'Total Orders', value: mockOrders.length, bg: '#00b894' },
+          { label: 'Total Products', value: productCount, bg: '#667eea' },
+          { label: 'Total Orders', value: orderCount, bg: '#00b894' },
           { label: 'Total Revenue', value: `₦${totalRevenue.toFixed(2)}`, bg: '#f39c12' },
         ].map((s) => (
           <div key={s.label} style={{ ...statCard, background: s.bg }}>
@@ -45,31 +63,24 @@ export default function Dashboard() {
           </tr>
         </thead>
         <tbody>
-          {recentOrders.map((o) => (
-            <tr key={o.id} style={{ borderBottom: '1px solid #eee' }}>
-              <td style={tdStyle}>{o.id}</td>
-              <td style={tdStyle}>{o.shippingFullName}</td>
-              <td style={tdStyle}>{new Date(o.createdAt).toLocaleDateString()}</td>
-              <td style={tdStyle}>₦{Number(o.totalAmount).toFixed(2)}</td>
-              <td style={tdStyle}>
-                <span style={{ padding: '2px 8px', background: statusColors[o.status] || '#888', color: '#fff', borderRadius: '12px', fontSize: '0.8rem' }}>
-                  {o.status}
-                </span>
-              </td>
-            </tr>
-          ))}
+          {orders.map((o) => {
+            const ship = o.shippingAddress || {};
+            return (
+              <tr key={o.id} style={{ borderBottom: '1px solid #eee' }}>
+                <td style={tdStyle}>{o.id}</td>
+                <td style={tdStyle}>{ship.fullName || '-'}</td>
+                <td style={tdStyle}>{new Date(o.createdAt).toLocaleDateString()}</td>
+                <td style={tdStyle}>₦{Number(o.totalAmount).toFixed(2)}</td>
+                <td style={tdStyle}>
+                  <span style={{ padding: '2px 8px', background: statusColors[o.status] || '#888', color: '#fff', borderRadius: '12px', fontSize: '0.8rem' }}>
+                    {o.status}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
-
-      <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap' }}>
-        {[
-          { to: '/admin/products', label: 'Manage Products' },
-          { to: '/admin/orders', label: 'Manage Orders' },
-          { to: '/admin/categories', label: 'Manage Categories' },
-        ].map((l) => (
-          <Link key={l.to} to={l.to} style={quickLink}>{l.label}</Link>
-        ))}
-      </div>
     </div>
   );
 }
@@ -77,15 +88,3 @@ export default function Dashboard() {
 const statCard = { padding: '1.25rem', borderRadius: '8px', color: '#fff' };
 const thStyle = { padding: '0.75rem 0.5rem' };
 const tdStyle = { padding: '0.75rem 0.5rem' };
-const quickLink = {
-  flex: 1,
-  display: 'block',
-  textAlign: 'center',
-  padding: '1rem',
-  background: '#667eea',
-  color: '#fff',
-  borderRadius: '8px',
-  textDecoration: 'none',
-  fontWeight: 600,
-  minWidth: 180,
-};

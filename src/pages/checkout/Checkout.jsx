@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
-import { mockAddresses } from '../../data/mockData';
+import addressService from '../../services/addressService';
+import orderService from '../../services/orderService';
+import paymentService from '../../services/paymentService';
 import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
 
@@ -20,17 +22,23 @@ export default function Checkout() {
       navigate('/login?returnUrl=/checkout');
       return;
     }
-    const saved = mockAddresses;
-    setAddresses(saved);
-    const defaultAddr = saved.find((a) => a.isDefault);
-    if (defaultAddr) setSelectedAddressId(defaultAddr.id);
-    else if (saved.length > 0) setSelectedAddressId(saved[0].id);
+    addressService.getAll().then((res) => {
+      const saved = res.data?.data || [];
+      setAddresses(saved);
+      const defaultAddr = saved.find((a) => a.isDefault);
+      if (defaultAddr) setSelectedAddressId(defaultAddr.id);
+      else if (saved.length > 0) setSelectedAddressId(saved[0].id);
+    }).catch(() => {});
   }, [user, navigate]);
 
   const shipping = subtotal >= 50000 ? 0 : 2500;
   const total = subtotal + shipping;
 
   const handlePlaceOrder = async () => {
+    if (addresses.length === 0) {
+      setError('Please add a shipping address before checking out');
+      return;
+    }
     if (!selectedAddressId) {
       setError('Please select a shipping address');
       return;
@@ -42,19 +50,22 @@ export default function Checkout() {
     setLoading(true);
     setError('');
     try {
-      const orderData = {
-        addressId: selectedAddressId,
-        items: cart.map((item) => ({
-          productId: item.product.id,
-          quantity: item.quantity,
-        })),
-      };
-      const orderId = 'ORD-' + Date.now();
-      console.log('Order created:', orderId, orderData);
+      const res = await orderService.checkoutFromCart(selectedAddressId);
+      const order = res.data?.data || res.data;
+
+      const payRes = await paymentService.initialize(order.id, `${window.location.origin}/payment/verify`);
+      const payment = payRes.data?.data || payRes.data;
+
       clearCart();
-      navigate('/payment/success?orderId=' + orderId);
+      if (payment.authorizationUrl) {
+        window.location.href = payment.authorizationUrl;
+      } else if (payment.reference) {
+        navigate('/payment/verify?reference=' + payment.reference);
+      } else {
+        navigate('/payment/success?orderId=' + order.id);
+      }
     } catch (err) {
-      setError(err.message || 'Failed to place order');
+      setError(err.response?.data?.message || err.message || 'Failed to place order');
     } finally {
       setLoading(false);
     }
@@ -72,7 +83,7 @@ export default function Checkout() {
         {addresses.length === 0 ? (
           <div>
             <p>No saved addresses. Please add one first.</p>
-            <Link to="/addresses" style={linkStyle}>Add Address</Link>
+            <Link to="/addresses?returnUrl=/checkout" style={linkStyle}>Add Address</Link>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -110,9 +121,9 @@ export default function Checkout() {
       <section style={sectionStyle}>
         <h2>2. Order Summary</h2>
         {cart.map((item) => (
-          <div key={item.product.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
-            <span>{item.product.name} x {item.quantity}</span>
-            <span>₦{(Number(item.product.price) * item.quantity).toFixed(2)}</span>
+          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
+            <span>{item.productName} x {item.quantity}</span>
+            <span>₦{(Number(item.unitPrice) * item.quantity).toFixed(2)}</span>
           </div>
         ))}
         <div style={{ marginTop: '1rem' }}>
@@ -130,8 +141,8 @@ export default function Checkout() {
 
       <section style={sectionStyle}>
         <h2>3. Payment</h2>
-        <button onClick={handlePlaceOrder} style={payBtn} disabled={loading || addresses.length === 0}>
-          Pay with Paystack
+        <button onClick={handlePlaceOrder} style={payBtn} disabled={loading}>
+          {addresses.length === 0 ? 'Add a shipping address first' : 'Pay with Paystack'}
         </button>
       </section>
     </div>

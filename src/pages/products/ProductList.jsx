@@ -1,13 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { mockProducts, mockCategories } from '../../data/mockData';
+import productService from '../../services/productService';
+import categoryService from '../../services/categoryService';
 import ProductCard from '../../components/products/ProductCard';
 import Pagination from '../../components/common/Pagination';
 
 const ITEMS_PER_PAGE = 8;
 
 export default function ProductList() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get('category') || '';
   const initialSearch = searchParams.get('q') || '';
 
@@ -15,21 +16,42 @@ export default function ProductList() {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const filtered = useMemo(() => {
-    return mockProducts.filter((p) => {
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory
-        ? String(p.category?.id) === String(selectedCategory)
-        : true;
-      return matchesSearch && matchesCategory;
-    });
-  }, [searchTerm, selectedCategory]);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [totalElements, setTotalElements] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginated = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  useEffect(() => {
+    categoryService.getAll().then((res) => {
+      setCategories(res.data?.data || []);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    const params = {
+      page: currentPage - 1,
+      size: ITEMS_PER_PAGE,
+      sortBy: 'id',
+      direction: 'asc',
+    };
+    if (searchTerm) params.name = searchTerm;
+    if (selectedCategory) params.categoryId = selectedCategory;
+
+    productService.getAll(params).then((res) => {
+      const data = res.data?.data || { content: [], totalElements: 0 };
+      setProducts(data.content || []);
+      setTotalElements(data.totalElements || 0);
+    }).catch((err) => {
+      setError(err.message || 'Failed to load products');
+    }).finally(() => {
+      setLoading(false);
+    });
+  }, [searchTerm, selectedCategory, currentPage]);
+
+  const totalPages = Math.ceil(totalElements / ITEMS_PER_PAGE);
 
   const handleCategoryChange = (catId) => {
     setSelectedCategory(catId === selectedCategory ? '' : catId);
@@ -45,7 +67,7 @@ export default function ProductList() {
     <div style={{ display: 'flex', gap: '2rem', maxWidth: 1200, margin: '0 auto', padding: '2rem 1rem' }}>
       <aside style={{ minWidth: 220 }}>
         <h3>Categories</h3>
-        {mockCategories.map((c) => (
+        {categories.map((c) => (
           <label key={c.id} style={{ display: 'block', padding: '0.35rem 0', cursor: 'pointer' }}>
             <input
               type="checkbox"
@@ -66,12 +88,16 @@ export default function ProductList() {
             onChange={handleSearch}
             style={inputStyle}
           />
-          <p style={{ color: '#666', marginTop: '0.5rem' }}>{filtered.length} product(s) found</p>
+          <p style={{ color: '#666', marginTop: '0.5rem' }}>{totalElements} product(s) found</p>
         </div>
 
         <div style={gridStyle}>
-          {paginated.length > 0 ? (
-            paginated.map((p) => <ProductCard key={p.id} product={p} />)
+          {loading ? (
+            <p>Loading products...</p>
+          ) : error ? (
+            <p style={{ color: 'red' }}>{error}</p>
+          ) : products.length > 0 ? (
+            products.map((p) => <ProductCard key={p.id} product={p} />)
           ) : (
             <p>No products match your criteria.</p>
           )}

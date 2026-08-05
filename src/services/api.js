@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const baseURL = import.meta.env.VITE_API_URL || '/api'
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -16,11 +18,15 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
+
+      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
+      const authPages = ['/login', '/register', '/forgot-password', '/reset-password']
+
+      if (!authPages.includes(window.location.pathname)) {
+        window.location.assign(`/login?returnUrl=${encodeURIComponent(currentPath)}`)
       }
     }
     return Promise.reject(error)

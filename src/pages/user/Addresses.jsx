@@ -1,29 +1,57 @@
-import { useState } from 'react';
-import { mockAddresses } from '../../data/mockData';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import addressService from '../../services/addressService';
 
 const emptyForm = { label: '', fullName: '', line1: '', line2: '', city: '', state: '', postalCode: '', country: '', phone: '', isDefault: false };
 
 export default function Addresses() {
-  const [addresses, setAddresses] = useState(mockAddresses);
+  const [addresses, setAddresses] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl');
+
+  const loadAddresses = () => {
+    setLoading(true);
+    addressService.getAll().then((res) => {
+      setAddresses(res.data?.data || []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { loadAddresses(); }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      setAddresses((prev) => prev.map((a) => (a.id === editingId ? { ...a, ...form } : a)));
-    } else {
-      setAddresses((prev) => [...prev, { ...form, id: Date.now() }]);
+    try {
+      if (editingId) {
+        await addressService.update(editingId, form);
+      } else {
+        await addressService.create(form);
+      }
+      setForm(emptyForm);
+      setEditingId(null);
+      setShowForm(false);
+      if (returnUrl) {
+        navigate(returnUrl);
+      } else {
+        loadAddresses();
+      }
+    } catch (err) {
+      const data = err.response?.data;
+      const fieldErrors = data?.data && typeof data.data === 'object'
+        ? Object.values(data.data).join('. ')
+        : '';
+      const status = err.response?.status ? ` (HTTP ${err.response.status})` : '';
+      alert((data?.message || fieldErrors || 'Failed to save address') + status + '. Please check your details and try again.');
     }
-    setForm(emptyForm);
-    setEditingId(null);
-    setShowForm(false);
   };
 
   const handleEdit = (addr) => {
@@ -34,7 +62,9 @@ export default function Addresses() {
 
   const handleDelete = (id) => {
     if (window.confirm('Delete this address?')) {
-      setAddresses((prev) => prev.filter((a) => a.id !== id));
+      addressService.delete(id).then(() => {
+        loadAddresses();
+      }).catch(() => alert('Failed to delete address'));
     }
   };
 
@@ -68,7 +98,7 @@ export default function Addresses() {
             ].map((f) => (
               <div key={f.name} style={{ marginBottom: '0.75rem' }}>
                 <label>{f.label}</label>
-                <input name={f.name} value={form[f.name]} onChange={handleChange} type={f.type} required={f.name !== 'line2'} style={inputStyle} />
+                <input name={f.name} value={form[f.name]} onChange={handleChange} type={f.type} required={['fullName', 'line1', 'city', 'postalCode', 'country'].includes(f.name)} style={inputStyle} />
               </div>
             ))}
           </div>

@@ -3,10 +3,18 @@ import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function Cart() {
-  const { cart, updateQuantity, removeItem, clearCart, subtotal } = useCart();
+  const { cart, updateQuantity, removeItem, clearCart, subtotal, loading } = useCart();
   const { user } = useAuth();
   const shipping = subtotal >= 50000 ? 0 : 2500;
   const total = subtotal + shipping;
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <h2>Loading your cart...</h2>
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -22,29 +30,31 @@ export default function Cart() {
       <h1>Shopping Cart</h1>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
         {cart.map((item) => (
-          <div key={item.product.id} style={itemStyle}>
+          <div key={item.id} style={itemStyle}>
             <img
-              src={item.product.imageUrl || '/placeholder.png'}
-              alt={item.product.name}
+              src={item.imageUrl || '/placeholder.png'}
+              alt={item.productName}
               style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6 }}
             />
             <div style={{ flex: 1 }}>
-              <Link to={`/products/${item.product.id}`} style={{ color: '#333', textDecoration: 'none' }}>
-                <h3 style={{ margin: 0 }}>{item.product.name}</h3>
+              <Link to={`/products/${item.productId}`} style={{ color: '#333', textDecoration: 'none' }}>
+                <h3 style={{ margin: 0 }}>{item.productName}</h3>
               </Link>
-              <p style={{ margin: '0.25rem 0', color: '#666' }}>₦{Number(item.product.price).toFixed(2)}</p>
+              <p style={{ margin: '0.25rem 0', color: '#666' }}>₦{Number(item.unitPrice).toFixed(2)}</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} style={qtyBtn}>-</button>
+              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={qtyBtn}>-</button>
               <span>{item.quantity}</span>
-              <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} style={qtyBtn}>+</button>
+              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={qtyBtn}>+</button>
             </div>
             <p style={{ fontWeight: 600, minWidth: 80, textAlign: 'right' }}>
-              ₦{(Number(item.product.price) * item.quantity).toFixed(2)}
+              ₦{(Number(item.unitPrice) * item.quantity).toFixed(2)}
             </p>
-            <button onClick={() => removeItem(item.product.id)} style={removeBtn}>&times;</button>
+            <button onClick={() => removeItem(item.id)} style={removeBtn}>&times;</button>
           </div>
+
         ))}
+        <button onClick={clearCart} style={{ ...btnStyle, background: '#e74c3c', marginTop: '1rem' }}>Clear Cart</button>
       </div>
 
       <div style={summaryStyle}>

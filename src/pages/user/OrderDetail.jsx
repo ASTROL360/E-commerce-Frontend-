@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { mockOrders } from '../../data/mockData';
+import orderService from '../../services/orderService';
+import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
 
 const statusColors = {
@@ -12,16 +14,31 @@ const statusColors = {
 
 export default function OrderDetail() {
   const { id } = useParams();
-  const order = mockOrders.find((o) => o.id === id || String(o.id) === String(id));
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  if (!order) {
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    orderService.getById(id).then((res) => {
+      setOrder(res.data?.data || null);
+    }).catch((err) => {
+      setError(err.message || 'Failed to load order');
+    }).finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) return <Loading />;
+  if (error || !order) {
     return (
       <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-        <ErrorMessage message="Order not found" />
+        <ErrorMessage message={error || 'Order not found'} />
         <Link to="/orders" style={{ color: '#667eea' }}>&larr; Back to Orders</Link>
       </div>
     );
   }
+
+  const ship = order.shippingAddress || {};
 
   return (
     <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
@@ -44,10 +61,10 @@ export default function OrderDetail() {
 
       <div style={cardStyle}>
         <h3>Shipping Address</h3>
-        <p>{order.shippingFullName}</p>
-        <p>{order.shippingLine1}</p>
-        <p>{order.shippingCity}, {order.shippingState} {order.shippingPostalCode}</p>
-        <p>{order.shippingCountry}</p>
+        <p>{ship.fullName}</p>
+        <p>{ship.line1}</p>
+        <p>{ship.city}, {ship.state} {ship.postalCode}</p>
+        <p>{ship.country}</p>
       </div>
 
       <div style={cardStyle}>
@@ -62,9 +79,9 @@ export default function OrderDetail() {
             </tr>
           </thead>
           <tbody>
-            {(order.items || []).map((item) => (
-              <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '0.5rem' }}>{item.product?.name || 'Product'}</td>
+            {(order.items || []).map((item, idx) => (
+              <tr key={item.productId || idx} style={{ borderBottom: '1px solid #eee' }}>
+                <td style={{ padding: '0.5rem' }}>{item.productName || 'Product'}</td>
                 <td style={{ padding: '0.5rem' }}>{item.quantity}</td>
                 <td style={{ padding: '0.5rem' }}>₦{Number(item.unitPrice).toFixed(2)}</td>
                 <td style={{ padding: '0.5rem' }}>₦{(Number(item.unitPrice) * item.quantity).toFixed(2)}</td>

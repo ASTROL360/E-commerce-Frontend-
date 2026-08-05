@@ -1,21 +1,29 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import PasswordInput from '../../components/common/PasswordInput';
+import authService from '../../services/authService';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const email = searchParams.get('email') || '';
+  const [pin, setPin] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+      setError('Please enter a valid 6-digit PIN');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
     if (password !== confirmPassword) {
@@ -25,26 +33,14 @@ export default function ResetPassword() {
 
     setLoading(true);
     try {
-      // await authService.resetPassword(token, password);
+      await authService.resetPassword(pin, password);
       setSuccess(true);
     } catch (err) {
-      setError(err.message || 'Failed to reset password');
+      setError(err.response?.data?.message || err.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }
   };
-
-  if (!token) {
-    return (
-      <div style={containerStyle}>
-        <div style={formCardStyle}>
-          <h1>Invalid Reset Link</h1>
-          <p>This password reset link is invalid or has expired.</p>
-          <Link to="/forgot-password" style={{ color: '#667eea' }}>Request a new link</Link>
-        </div>
-      </div>
-    );
-  }
 
   if (success) {
     return (
@@ -52,7 +48,7 @@ export default function ResetPassword() {
         <div style={formCardStyle}>
           <h1>Password Reset</h1>
           <p>Your password has been successfully reset.</p>
-          <Link to="/login" style={{ color: '#667eea' }}>Go to Login</Link>
+          <Link to="/login" style={{ color: '#667eea', fontWeight: 600 }}>Go to Login</Link>
         </div>
       </div>
     );
@@ -62,34 +58,42 @@ export default function ResetPassword() {
     <div style={containerStyle}>
       <div style={formCardStyle}>
         <h1>Reset Password</h1>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error && <p style={{ color: 'red', fontSize: '0.9rem' }}>{error}</p>}
+        {email && <p style={{ color: '#666', fontSize: '0.85rem', marginBottom: '1rem' }}>Resetting for: <strong>{email}</strong></p>}
+
         <form onSubmit={handleSubmit}>
           <div style={fieldStyle}>
-            <label>New Password</label>
+            <label>6-Digit PIN</label>
             <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              type="text"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="000000"
               required
-              style={inputStyle}
+              maxLength={6}
+              style={{ ...inputStyle, textAlign: 'center', fontSize: '1.25rem', letterSpacing: '0.5rem', fontFamily: 'monospace' }}
             />
           </div>
-          <div style={fieldStyle}>
-            <label>Confirm Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              style={inputStyle}
-            />
-          </div>
+
+          <PasswordInput
+            label="New Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <PasswordInput
+            label="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+
           <button type="submit" disabled={loading} style={btnStyle}>
             {loading ? 'Resetting...' : 'Reset Password'}
           </button>
         </form>
         <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-          <Link to="/login" style={{ color: '#667eea' }}>&larr; Back to Login</Link>
+          <Link to="/forgot-password" style={{ color: '#667eea' }}>&larr; Get new PIN</Link>
         </div>
       </div>
     </div>

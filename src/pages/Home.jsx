@@ -1,9 +1,21 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { mockProducts, mockCategories } from '../data/mockData';
+import productService from '../services/productService';
+import categoryService from '../services/categoryService';
 import ProductCard from '../components/products/ProductCard';
 
 export default function Home() {
-  const featuredProducts = mockProducts.slice(0, 4);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    productService.getAll({ page: 0, size: 4, sortBy: 'id', direction: 'asc' }).then((res) => {
+      setFeaturedProducts(res.data?.data?.content || []);
+    }).catch(() => {});
+    categoryService.getAll().then((res) => {
+      setCategories(res.data?.data || []);
+    }).catch(() => {});
+  }, []);
 
   return (
     <div>
@@ -25,7 +37,7 @@ export default function Home() {
       <section style={sectionStyle}>
         <h2>Categories</h2>
         <div style={gridStyle}>
-          {mockCategories.map((c) => (
+          {categories.map((c) => (
             <Link key={c.id} to={`/products?category=${c.id}`} style={catCardStyle}>
               <h3>{c.name}</h3>
               {c.description && <p>{c.description}</p>}

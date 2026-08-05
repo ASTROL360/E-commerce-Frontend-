@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
+import AdminLayout from './components/layout/AdminLayout'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import AdminRoute from './components/auth/AdminRoute'
 import Home from './pages/Home'
@@ -23,6 +24,7 @@ import AdminOrderDetail from './pages/admin/AdminOrderDetail'
 import AdminCategories from './pages/admin/AdminCategories'
 import PaymentSuccess from './pages/payment/PaymentSuccess'
 import PaymentCancel from './pages/payment/PaymentCancel'
+import PaymentVerify from './pages/payment/PaymentVerify'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -39,6 +41,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/cancel" element={<PaymentCancel />} />
+        <Route path="/payment/verify" element={<PaymentVerify />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/checkout" element={<Checkout />} />
@@ -48,7 +51,11 @@ function App() {
           <Route path="/addresses" element={<Addresses />} />
         </Route>
 
-        <Route element={<AdminRoute />}>
+        <Route path="*" element={<NotFound />} />
+      </Route>
+
+      <Route element={<AdminRoute />}>
+        <Route element={<AdminLayout />}>
           <Route path="/admin" element={<Dashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/products/new" element={<AdminProductForm />} />
@@ -57,8 +64,6 @@ function App() {
           <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
           <Route path="/admin/categories" element={<AdminCategories />} />
         </Route>
-
-        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   )

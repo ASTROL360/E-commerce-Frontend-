@@ -73,12 +73,14 @@ export default function Header() {
           <div className="nav-auth">
             {isAuthenticated ? (
               <>
-                <Link to="/cart" className="cart-link" onClick={() => setMobileMenuOpen(false)}>
-                  <span className="cart-icon">&#128722;</span>
-                  {getItemCount() > 0 && (
-                    <span className="cart-badge">{getItemCount()}</span>
-                  )}
-                </Link>
+                {!isAdmin && (
+                  <Link to="/cart" className="cart-link" onClick={() => setMobileMenuOpen(false)}>
+                    <span className="cart-icon">&#128722;</span>
+                    {getItemCount() > 0 && (
+                      <span className="cart-badge">{getItemCount()}</span>
+                    )}
+                  </Link>
+                )}
 
                 <div className="user-dropdown">
                   <button
@@ -89,33 +91,47 @@ export default function Header() {
                   </button>
                   {dropdownOpen && (
                     <div className="dropdown-menu">
-                      <Link
-                        to="/profile"
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        Profile
-                      </Link>
-                      <Link
-                        to="/orders"
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        My Orders
-                      </Link>
-                      <Link
-                        to="/addresses"
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        Addresses
-                      </Link>
+                      {isAdmin ? (
+                        <Link
+                          to="/admin"
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          Admin Dashboard
+                        </Link>
+                      ) : (
+                        <>
+                          <Link
+                            to="/profile"
+                            onClick={() => {
+                              setDropdownOpen(false);
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            Profile
+                          </Link>
+                          <Link
+                            to="/orders"
+                            onClick={() => {
+                              setDropdownOpen(false);
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            My Orders
+                          </Link>
+                          <Link
+                            to="/addresses"
+                            onClick={() => {
+                              setDropdownOpen(false);
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            Addresses
+                          </Link>
+                        </>
+                      )}
                       <button onClick={handleLogout} className="logout-btn">
                         Logout
                       </button>
