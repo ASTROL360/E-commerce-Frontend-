@@ -1,6 +1,5 @@
 import { createContext, useContext, useState } from 'react';
 import authService from '../services/authService';
-import { getGoogleProfile, googleAppPassword } from '../services/googleAuth';
 
 const AuthContext = createContext(null);
 
@@ -10,13 +9,6 @@ export function AuthProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
   const [token, setToken] = useState(() => localStorage.getItem('token'));
-
-  const persistAuth = (newToken, newUser) => {
-    setToken(newToken);
-    setUser(newUser);
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(newUser));
-  };
 
   const clearAuth = () => {
     setToken(null);
@@ -56,19 +48,13 @@ export function AuthProvider({ children }) {
     return profile;
   };
 
-  const loginWithGoogle = async () => {
-    const { email, name } = await getGoogleProfile();
-    const password = googleAppPassword(email);
-
-    try {
-      const res = await authService.login(email, password);
-      const authData = res.data?.data || res.data;
-      persistAuth(authData.token, await loadProfile({ name, email, role: 'CUSTOMER' }));
-      return authData;
-    } catch {
-      await authService.register(name || 'User', email, password);
-      return login(email, password);
-    }
+  const loginWithToken = async (token) => {
+    localStorage.setItem('token', token);
+    setToken(token);
+    const profile = await loadProfile({ email: '', role: 'CUSTOMER' });
+    setUser(profile);
+    localStorage.setItem('user', JSON.stringify(profile));
+    return profile;
   };
 
   const logout = () => {
@@ -80,7 +66,7 @@ export function AuthProvider({ children }) {
     token,
     login,
     register,
-    loginWithGoogle,
+    loginWithToken,
     logout,
     isAuthenticated: !!token,
     isAdmin: user?.role === 'ADMIN',

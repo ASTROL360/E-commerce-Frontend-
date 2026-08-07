@@ -11,7 +11,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://ecommerce-backend-mddx.onrender.com',
+        target: 'https://ecommerce-backend-jdp8.onrender.com',
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq) => {

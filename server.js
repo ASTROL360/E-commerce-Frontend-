@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
 
 const PORT = process.env.PORT || 3000
-const API_TARGET = process.env.API_TARGET || 'https://ecommerce-backend-mddx.onrender.com'
+const API_TARGET = process.env.API_TARGET || 'https://ecommerce-backend-jdp8.onrender.com'
 
 app.use(
   '/api',

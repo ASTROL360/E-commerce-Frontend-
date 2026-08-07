@@ -3,14 +3,14 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import PasswordInput from '../../components/common/PasswordInput';
+import { GOOGLE_AUTH_URL } from '../../services/authService';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || '/';
@@ -26,19 +26,6 @@ export default function Login() {
       setError(err.response?.data?.message || err.message || 'Login failed');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setError('');
-    setGoogleLoading(true);
-    try {
-      const result = await loginWithGoogle();
-      if (result) navigate(returnUrl);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Google sign-in failed');
-    } finally {
-      setGoogleLoading(false);
     }
   };
 
@@ -76,10 +63,10 @@ export default function Login() {
           <hr style={hrStyle} />
         </div>
 
-        <button type="button" onClick={handleGoogleLogin} disabled={googleLoading} style={googleBtnStyle}>
+        <a href={GOOGLE_AUTH_URL} style={googleBtnStyle}>
           <GoogleIcon />
-          <span>{googleLoading ? 'Signing in...' : 'Sign in with Google'}</span>
-        </button>
+          <span>Continue with Google</span>
+        </a>
 
         <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.9rem' }}>
           <Link to="/forgot-password">Forgot Password?</Link>
@@ -108,7 +95,7 @@ const formCardStyle = { width: '100%', maxWidth: 420, padding: '2rem', backgroun
 const fieldStyle = { marginBottom: '1rem' };
 const inputStyle = { width: '100%', padding: '0.6rem 1rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', marginTop: '0.25rem', boxSizing: 'border-box' };
 const btnStyle = { width: '100%', padding: '0.75rem', background: '#667eea', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', cursor: 'pointer', fontWeight: 600 };
-const googleBtnStyle = { width: '100%', padding: '0.65rem 1rem', background: '#fff', color: '#444', border: '1px solid #dadce0', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer', fontWeight: 500, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.65rem', transition: 'background 0.2s, box-shadow 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' };
+const googleBtnStyle = { width: '100%', padding: '0.65rem 1rem', background: '#fff', color: '#444', border: '1px solid #dadce0', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer', fontWeight: 500, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.65rem', textDecoration: 'none', transition: 'background 0.2s, box-shadow 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.04)', boxSizing: 'border-box' };
 const dividerStyle = { display: 'flex', alignItems: 'center', margin: '1.25rem 0' };
 const hrStyle = { flex: 1, border: 'none', borderTop: '1px solid #e0e0e0' };
 const dividerTextStyle = { padding: '0 0.85rem', color: '#999', fontSize: '0.85rem' };

@@ -43,4 +43,4 @@ The production server (`server.js`) serves the built app from `dist/` and proxie
 
 - Build command: `npm install && npm run build`
 - Start command: `npm start`
-- Env: `PORT` is injected by Render; `API_TARGET` defaults to `https://ecommerce-backend-mddx.onrender.com`
+- Env: `PORT` is injected by Render; `API_TARGET` defaults to `https://ecommerce-backend-jdp8.onrender.com`

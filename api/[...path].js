@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   delete query.path
 
   const search = new URLSearchParams(query).toString()
-  const target = `https://ecommerce-backend-mddx.onrender.com/api/${segments}${search ? `?${search}` : ''}`
+  const target = `https://ecommerce-backend-jdp8.onrender.com/api/${segments}${search ? `?${search}` : ''}`
 
   const headers = { ...req.headers }
   delete headers.origin

@@ -12,6 +12,7 @@ import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import ResetPassword from './pages/auth/ResetPassword'
+import OAuthCallback from './pages/OAuthCallback'
 import Profile from './pages/user/Profile'
 import Orders from './pages/user/Orders'
 import OrderDetail from './pages/user/OrderDetail'
@@ -32,6 +33,7 @@ function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/oauth2/callback" element={<OAuthCallback />} />
         <Route path="/products" element={<ProductList />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} />
