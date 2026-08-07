@@ -1,6 +1,9 @@
 {
   "rewrites": [
-    { "handle": "filesystem" },
+    {
+      "source": "/api/:path*",
+      "destination": "https://ecommerce-backend-jdp8.onrender.com/api/:path*"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
