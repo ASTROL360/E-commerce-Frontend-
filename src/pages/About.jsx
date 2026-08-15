@@ -85,7 +85,7 @@ export default function About() {
       </section>
 
       <section style={{ ...sectionStyle, textAlign: 'center' }}>
-        <h2 style={h2Style}>Ready to shop with us?</h2>
+        <h2 style={h2Style}>Ready to shop with us now?</h2>
         <p style={{ color: '#4b5563', marginBottom: '1.5rem' }}>
           Join thousands of happy customers and get your favourite products delivered free to your door.
         </p>
