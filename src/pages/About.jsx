@@ -96,7 +96,7 @@ export default function About() {
       </section>
 
       <section style={{ ...sectionStyle, paddingBottom: '4rem' }}>
-        <h2 style={{ ...h2Style, textAlign: 'center' }}>Get in Touch</h2>
+        <h2 style={{ ...h2Style, textAlign: 'center' }}>Get in Touch </h2>
         <div style={{ ...cardStyle, maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
           <p style={pStyle}><strong>Email:</strong> support@shophub.com</p>
           <p style={pStyle}><strong>Phone:</strong> (+234) 916-4794-335</p>
