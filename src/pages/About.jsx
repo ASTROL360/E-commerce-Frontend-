@@ -90,7 +90,7 @@ export default function About() {
           Join thousands of happy customers and get your favourite products delivered free to your door.
         </p>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link to="/products" className="btn btn-primary">Start Shopping</Link>
+          <Link to="/products" className="btn btn-primary">Start Shopping from here</Link>
           <Link to="/register" className="btn btn-outline">Create an Account now</Link>
         </div>
       </section>
