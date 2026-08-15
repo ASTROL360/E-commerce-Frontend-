@@ -88,6 +88,7 @@ const catCardStyle = {
 };
 const linkStyle = {
   display: 'inline-block',
+  
   padding: '0.75rem 2rem',
   background: '#667eea',
   color: '#fff',
