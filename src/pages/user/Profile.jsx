@@ -21,6 +21,7 @@ export default function Profile() {
         <div>
           <h1>{user.name}</h1>
           <p style={{ color: '#6b7280' }}>{user.email}</p>
+          
         </div>
       </div>
 
