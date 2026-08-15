@@ -35,7 +35,7 @@ export default function Profile() {
       <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
         <Link to="/orders" style={navCardStyle}>
           <h3>My Orders</h3>
-          <p>View your order history</p>
+          <p>Click here to view all the orders you've placed</p>
         </Link>
         <Link to="/addresses" style={navCardStyle}>
           <h3>My Addresses</h3>
