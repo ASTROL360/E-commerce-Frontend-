@@ -75,7 +75,7 @@ const gridStyle = {
   gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
   gap: '1.5rem',
   marginTop: '1rem',
-  
+
 };
 const catCardStyle = {
   display: 'block',
@@ -96,4 +96,5 @@ const linkStyle = {
   borderRadius: '8px',
   textDecoration: 'none',
   fontWeight: 600,
+  
 };
