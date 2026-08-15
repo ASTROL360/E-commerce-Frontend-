@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="footer-container">
         <div className="footer-brand">
           <h3>ShopHub</h3>
-          <p>Your one-stop online shop for everything you need.</p>
+          <p>Your one-stop online shop for everything you need with a free delivery to your door step.</p>
         </div>
 
         <div className="footer-links">
@@ -26,7 +26,9 @@ export default function Footer() {
 
       <div className="footer-bottom">
         <p>&copy; 2026 ShopHub. All rights reserved.</p>
+
       </div>
+      
     </footer>
   );
 }
