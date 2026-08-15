@@ -47,7 +47,7 @@ export default function Home() {
       </section>
 
       <div style={{ textAlign: 'center', padding: '2rem 0 4rem' }}>
-        <Link to="/products" style={linkStyle}>View All Products</Link>
+        <Link to="/products" style={linkStyle}>View All Products here</Link>
       </div>
     </div>
   );
