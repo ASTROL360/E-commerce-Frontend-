@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import paymentService from '../../services/paymentService';
 import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
@@ -7,6 +7,7 @@ import ErrorMessage from '../../components/common/ErrorMessage';
 export default function PaymentVerify() {
   const [searchParams] = useSearchParams();
   const reference = searchParams.get('reference');
+  const navigate = useNavigate();
   const [status, setStatus] = useState(null);
   const [orderId, setOrderId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +29,13 @@ export default function PaymentVerify() {
       setError(err.response?.data?.message || err.message || 'Failed to verify payment');
     }).finally(() => setLoading(false));
   }, [reference]);
+
+  useEffect(() => {
+    if (status === 'SUCCESS') {
+      const timer = setTimeout(() => navigate('/'), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [status, navigate]);
 
   if (loading) return <Loading />;
 
@@ -55,10 +63,9 @@ export default function PaymentVerify() {
               Order ID: <strong>{orderId}</strong>
             </p>
           )}
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-            <Link to="/products" style={btnPrimary}>Continue Shopping</Link>
-            <Link to="/orders" style={btnSecondary}>View My Orders</Link>
-          </div>
+          <p style={{ margin: '2rem 0 0', color: '#888' }}>
+            Redirecting you to the home page...
+          </p>
         </>
       ) : (
         <>

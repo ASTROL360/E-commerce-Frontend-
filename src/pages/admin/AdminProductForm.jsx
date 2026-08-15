@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import productService from '../../services/productService';
 import categoryService from '../../services/categoryService';
 import Loading from '../../components/common/Loading';
+import { fileToDataUrl } from '../../utils/productImageUtils';
 
 const EMPTY_VARIANTS = [
   { colorName: '', imageUrl: '' },
@@ -66,6 +67,27 @@ export default function AdminProductForm() {
     setForm({ ...form, colorVariants: variants });
   };
 
+  const handleMainImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setForm({ ...form, imageUrl: dataUrl });
+    } catch {
+      setError('Failed to process image');
+    }
+  };
+
+  const handleVariantImageChange = async (index, file) => {
+    if (!file) return;
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      handleVariantChange(index, 'imageUrl', dataUrl);
+    } catch {
+      setError('Failed to process image');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -114,7 +136,6 @@ export default function AdminProductForm() {
           { name: 'name', label: 'Product Name', type: 'text' },
           { name: 'price', label: 'Price', type: 'number' },
           { name: 'stockQuantity', label: 'Stock Quantity', type: 'number' },
-          { name: 'imageUrl', label: 'Image URL', type: 'text' },
         ].map((f) => (
           <div key={f.name} style={fieldStyle}>
             <label>{f.label}</label>
@@ -130,6 +151,19 @@ export default function AdminProductForm() {
         ))}
 
         <div style={fieldStyle}>
+          <label>Product Image</label>
+          <input type="file" accept="image/*" onChange={handleMainImageChange} style={fileInputStyle} />
+          {form.imageUrl ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <img src={form.imageUrl} alt="Product" style={mainPreviewStyle} />
+              <button type="button" onClick={() => setForm({ ...form, imageUrl: '' })} style={removeImgBtn}>Remove</button>
+            </div>
+          ) : (
+            <p style={hintStyle}>Choose a JPG or PNG file to upload.</p>
+          )}
+        </div>
+
+        <div style={fieldStyle}>
           <label>Category</label>
           <select name="categoryId" value={form.categoryId} onChange={handleChange} style={inputStyle}>
             <option value="">Select Category</option>
@@ -142,7 +176,7 @@ export default function AdminProductForm() {
         <div style={fieldStyle}>
           <label>Color Variants (up to 4 colors)</label>
           <p style={{ margin: '0.25rem 0 0.75rem', fontSize: '0.85rem', color: '#777' }}>
-            Add a color name and image URL for each color of this product.
+            Add a color name and upload an image for each color of this product.
           </p>
           {form.colorVariants.map((variant, index) => (
             <div key={index} style={variantRowStyle}>
@@ -155,10 +189,10 @@ export default function AdminProductForm() {
               />
               <input
                 name={`variantUrl-${index}`}
-                placeholder="Image URL"
-                value={variant.imageUrl}
-                onChange={(e) => handleVariantChange(index, 'imageUrl', e.target.value)}
-                style={variantUrlInputStyle}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleVariantImageChange(index, e.target.files?.[0])}
+                style={variantFileInputStyle}
               />
               {variant.imageUrl ? (
                 <img src={variant.imageUrl} alt={variant.colorName || `Variant ${index + 1}`} style={variantPreviewStyle} />
@@ -194,7 +228,11 @@ const fieldStyle = { marginBottom: '1rem' };
 const inputStyle = { width: '100%', padding: '0.6rem 1rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', marginTop: '0.25rem', boxSizing: 'border-box' };
 const variantRowStyle = { display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' };
 const variantColorInputStyle = { width: '30%', padding: '0.5rem 0.75rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '0.9rem', boxSizing: 'border-box' };
-const variantUrlInputStyle = { flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '0.9rem', boxSizing: 'border-box' };
+const fileInputStyle = { width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '0.9rem', background: '#fff', boxSizing: 'border-box' };
+const variantFileInputStyle = { flex: 1, padding: '0.35rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '0.85rem', background: '#fff', boxSizing: 'border-box', maxWidth: '100%' };
+const mainPreviewStyle = { width: 120, height: 120, objectFit: 'cover', borderRadius: '8px', border: '1px solid #ddd' };
+const removeImgBtn = { padding: '0.4rem 0.75rem', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' };
+const hintStyle = { margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#777' };
 const variantPreviewStyle = { width: 44, height: 44, objectFit: 'cover', borderRadius: '6px', border: '1px solid #ddd' };
 const variantPreviewPlaceholder = { width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', border: '1px dashed #ccc', color: '#999', fontSize: '0.65rem', textAlign: 'center', boxSizing: 'border-box' };
 const saveBtn = { padding: '0.75rem 1.5rem', background: '#00b894', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 };

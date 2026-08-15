@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import PasswordInput from '../../components/common/PasswordInput';
 import authService from '../../services/authService';
 
@@ -12,13 +12,12 @@ export default function ResetPassword() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+    if (!/^\d{6}$/.test(pin)) {
       setError('Please enter a valid 6-digit PIN');
       return;
     }
@@ -91,10 +90,11 @@ export default function ResetPassword() {
           <button type="submit" disabled={loading} style={btnStyle}>
             {loading ? 'Resetting...' : 'Reset Password'}
           </button>
+
+          <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+            <Link to="/forgot-password" style={{ color: '#667eea' }}>&larr; Get new PIN</Link>
+          </div>
         </form>
-        <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-          <Link to="/forgot-password" style={{ color: '#667eea' }}>&larr; Get new PIN</Link>
-        </div>
       </div>
     </div>
   );

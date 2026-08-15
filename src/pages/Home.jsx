@@ -21,7 +21,7 @@ export default function Home() {
     <div>
       <section style={heroStyle}>
         <h1>Welcome to ShopHub</h1>
-        <p>Discover amazing products at unbeatable prices</p>
+        <p>Discover amazing products at unbeatable prices and free delivery to your door step</p>
         <Link to="/products" style={btnStyle}>Shop Now</Link>
       </section>
 

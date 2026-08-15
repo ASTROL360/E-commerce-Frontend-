@@ -1,4 +1,4 @@
-# ShopHub E-Commerce Frontend
+y# ShopHub E-Commerce Frontend
 
 React + Vite e-commerce frontend connected to the deployed backend API (Render) and Supabase database.
 

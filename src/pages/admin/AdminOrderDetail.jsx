@@ -4,14 +4,6 @@ import orderService from '../../services/orderService';
 import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
 
-const statusColors = {
-  PENDING: '#f39c12',
-  PAID: '#3498db',
-  SHIPPED: '#9b59b6',
-  DELIVERED: '#27ae60',
-  CANCELLED: '#e74c3c',
-};
-
 export default function AdminOrderDetail() {
   const { id } = useParams();
   const [order, setOrder] = useState(null);

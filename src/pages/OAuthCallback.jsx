@@ -20,7 +20,7 @@ export default function OAuthCallback() {
     }
 
     loginWithToken(token)
-      .then(() => navigate('/', { replace: true }))
+      .then((profile) => navigate(profile?.role === 'ADMIN' ? '/admin' : '/', { replace: true }))
       .catch((err) => {
         setError(err.response?.data?.message || err.message || 'Sign-in failed.');
       });

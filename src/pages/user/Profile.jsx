@@ -1,10 +1,9 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import Avatar from '../../components/common/Avatar';
 
 export default function Profile() {
   const { user } = useAuth();
-  const [editing, setEditing] = useState(false);
 
   if (!user) {
     return (
@@ -17,36 +16,20 @@ export default function Profile() {
 
   return (
     <div style={{ maxWidth: 600, margin: '2rem auto', padding: '0 1rem' }}>
-      <h1>My Profile</h1>
+      <div style={profileHeaderStyle}>
+        <Avatar user={user} size={96} />
+        <div>
+          <h1>{user.name}</h1>
+          <p style={{ color: '#6b7280' }}>{user.email}</p>
+        </div>
+      </div>
 
       <div style={cardStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>Personal Info</h2>
-          <button onClick={() => setEditing(!editing)} style={editBtn}>
-            {editing ? 'Cancel' : 'Edit'}
-          </button>
-        </div>
-
-        {editing ? (
-          <form onSubmit={(e) => { e.preventDefault(); setEditing(false); }}>
-            <div style={fieldStyle}>
-              <label>Name</label>
-              <input defaultValue={user.name} style={inputStyle} />
-            </div>
-            <div style={fieldStyle}>
-              <label>Email</label>
-              <input defaultValue={user.email} type="email" style={inputStyle} />
-            </div>
-            <button type="submit" style={saveBtn}>Save Changes</button>
-          </form>
-        ) : (
-          <div>
-            <p><strong>Name:</strong> {user.name}</p>
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Role:</strong> {user.role}</p>
-            <p><strong>Member since:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
-          </div>
-        )}
+        <h2>Personal Info</h2>
+        <p><strong>Name:</strong> {user.name}</p>
+        <p><strong>Email:</strong> {user.email}</p>
+        <p><strong>Role:</strong> {user.role}</p>
+        <p><strong>Member since:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
@@ -64,10 +47,7 @@ export default function Profile() {
 }
 
 const cardStyle = { padding: '1.5rem', background: '#f8f9fa', borderRadius: '8px' };
-const fieldStyle = { marginBottom: '1rem' };
-const inputStyle = { width: '100%', padding: '0.6rem 1rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', marginTop: '0.25rem', boxSizing: 'border-box' };
-const editBtn = { padding: '0.5rem 1rem', background: '#667eea', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' };
-const saveBtn = { padding: '0.6rem 1.5rem', background: '#00b894', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 };
+const profileHeaderStyle = { display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem' };
 const navCardStyle = {
   flex: 1,
   display: 'block',

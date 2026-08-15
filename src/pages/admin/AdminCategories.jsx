@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import categoryService from '../../services/categoryService';
-import productService from '../../services/productService';
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', description: '' });
 
   const loadCategories = () => {
@@ -21,16 +21,43 @@ export default function AdminCategories() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const startCreate = () => {
+    setEditing(null);
+    setForm({ name: '', description: '' });
+    setShowForm(!showForm);
+  };
+
+  const startEdit = (c) => {
+    setEditing(c);
+    setForm({ name: c.name, description: c.description || '' });
+    setShowForm(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name) return;
     try {
-      await categoryService.create(form);
+      if (editing) {
+        await categoryService.update(editing.id, form);
+      } else {
+        await categoryService.create(form);
+      }
       setForm({ name: '', description: '' });
       setShowForm(false);
+      setEditing(null);
       loadCategories();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to create category');
+      alert(err.response?.data?.message || 'Failed to save category');
+    }
+  };
+
+  const handleDelete = async (c) => {
+    if (!window.confirm(`Delete category "${c.name}"?`)) return;
+    try {
+      await categoryService.remove(c.id);
+      loadCategories();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete category');
     }
   };
 
@@ -38,13 +65,14 @@ export default function AdminCategories() {
     <div style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>Categories</h1>
-        <button onClick={() => setShowForm(!showForm)} style={addBtn}>
+        <button onClick={startCreate} style={addBtn}>
           {showForm ? 'Cancel' : 'Add Category'}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={handleSubmit} style={formStyle}>
+          <h3>{editing ? `Edit Category: ${editing.name}` : 'New Category'}</h3>
           <div style={fieldStyle}>
             <label>Name</label>
             <input name="name" value={form.name} onChange={handleChange} required style={inputStyle} />
@@ -53,7 +81,12 @@ export default function AdminCategories() {
             <label>Description</label>
             <input name="description" value={form.description} onChange={handleChange} style={inputStyle} />
           </div>
-          <button type="submit" style={saveBtn}>Create Category</button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button type="submit" style={saveBtn}>{editing ? 'Update Category' : 'Create Category'}</button>
+            {editing && (
+              <button type="button" onClick={startCreate} style={cancelBtn}>Cancel</button>
+            )}
+          </div>
         </form>
       )}
 
@@ -75,7 +108,10 @@ export default function AdminCategories() {
                 <td style={tdStyle}>{c.id}</td>
                 <td style={tdStyle}>{c.name}</td>
                 <td style={tdStyle}>{c.description || '-'}</td>
-                <td style={tdStyle}>-</td>
+                <td style={tdStyle}>
+                  <button onClick={() => startEdit(c)} style={editBtn}>Edit</button>{' '}
+                  <button onClick={() => handleDelete(c)} style={deleteBtn}>Delete</button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -90,6 +126,8 @@ const formStyle = { padding: '1.5rem', background: '#f8f9fa', borderRadius: '8px
 const fieldStyle = { marginBottom: '1rem' };
 const inputStyle = { width: '100%', padding: '0.6rem 1rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', marginTop: '0.25rem', boxSizing: 'border-box' };
 const saveBtn = { padding: '0.6rem 1.5rem', background: '#00b894', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 };
+const cancelBtn = { padding: '0.6rem 1.5rem', background: '#ccc', color: '#333', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 };
 const thStyle = { padding: '0.75rem 0.5rem' };
 const tdStyle = { padding: '0.75rem 0.5rem' };
+const editBtn = { padding: '0.3rem 0.75rem', background: '#3498db', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' };
 const deleteBtn = { padding: '0.3rem 0.75rem', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' };

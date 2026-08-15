@@ -20,8 +20,8 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      navigate(returnUrl);
+      const profile = await login(email, password);
+      navigate(profile?.role === 'ADMIN' ? '/admin' : returnUrl);
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Login failed');
     } finally {

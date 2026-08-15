@@ -60,8 +60,17 @@ img { max-width: 100%; height: auto; }
 .btn-primary:hover { background: #1d4ed8; }
 .btn-outline { background: transparent; border: 1px solid #d1d5db; color: #374151; }
 .btn-outline:hover { background: #f3f4f6; text-decoration: none; }
+.btn-danger { background: #dc2626; color: #fff; }
+.btn-danger:hover { background: #b91c1c; }
 .btn-disabled { opacity: .5; cursor: not-allowed; }
 .btn-sm { padding: 6px 12px; font-size: .85rem; }
+
+/* Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+.modal { background: #fff; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,.2); width: 100%; max-width: 400px; padding: 24px; }
+.modal-title { font-size: 1.15rem; font-weight: 700; color: #1f2937; margin-bottom: 8px; }
+.modal-message { color: #4b5563; font-size: .95rem; margin-bottom: 20px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 
 /* Product Card */
 .product-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; transition: box-shadow .2s, transform .2s; }

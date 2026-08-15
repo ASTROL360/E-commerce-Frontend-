@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { GOOGLE_AUTH_URL } from '../../services/authService';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import PasswordInput from '../../components/common/PasswordInput';
 
@@ -8,8 +9,7 @@ export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const { register, loginWithGoogle } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -20,6 +20,7 @@ export default function Register() {
   };
 
   const handleSubmit = async (e) => {
+    
     e.preventDefault();
     setError('');
 
@@ -43,17 +44,8 @@ export default function Register() {
     }
   };
 
-  const handleGoogleRegister = async () => {
-    setError('');
-    setGoogleLoading(true);
-    try {
-      await loginWithGoogle();
-      navigate(returnUrl);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Google sign-in failed');
-    } finally {
-      setGoogleLoading(false);
-    }
+  const handleGoogleRegister = () => {
+    window.location.href = GOOGLE_AUTH_URL;
   };
 
   return (
@@ -96,9 +88,9 @@ export default function Register() {
           <hr style={hrStyle} />
         </div>
 
-        <button type="button" onClick={handleGoogleRegister} disabled={googleLoading} style={googleBtnStyle}>
+        <button type="button" onClick={handleGoogleRegister} style={googleBtnStyle}>
           <GoogleIcon />
-          <span>{googleLoading ? 'Signing in...' : 'Sign up with Google'}</span>
+          <span>Sign up with Google</span>
         </button>
 
         <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.9rem' }}>

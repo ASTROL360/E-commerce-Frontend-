@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import ConfirmDialog from '../common/ConfirmDialog';
+import Avatar from '../common/Avatar';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', end: true },
@@ -11,9 +14,11 @@ const navItems = [
 export default function AdminLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
+    setLogoutConfirmOpen(false);
     navigate('/');
   };
 
@@ -43,17 +48,34 @@ export default function AdminLayout() {
 
         <div style={sidebarFooter}>
           <div style={userInfo}>
-            <strong style={{ fontSize: '0.9rem' }}>{user?.name || 'Admin'}</strong>
-            <span style={roleBadge}>{user?.role || 'ADMIN'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Avatar user={user} size={32} />
+              <div>
+                <strong style={{ fontSize: '0.9rem' }}>{user?.name || 'Admin'}</strong>
+                <div>
+                  <span style={roleBadge}>{user?.role || 'ADMIN'}</span>
+                </div>
+              </div>
+            </div>
           </div>
           <Link to="/" style={storeLink}>View Store</Link>
-          <button onClick={handleLogout} style={logoutBtn}>Logout</button>
+          <button onClick={() => setLogoutConfirmOpen(true)} style={logoutBtn}>Logout</button>
         </div>
       </aside>
 
       <main style={content}>
         <Outlet />
       </main>
+
+      <ConfirmDialog
+        open={logoutConfirmOpen}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        danger
+        onConfirm={handleLogout}
+        onCancel={() => setLogoutConfirmOpen(false)}
+      />
     </div>
   );
 }

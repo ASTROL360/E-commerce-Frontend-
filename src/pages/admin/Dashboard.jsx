@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import productService from '../../services/productService';
 import orderService from '../../services/orderService';
+import ErrorMessage from '../../components/common/ErrorMessage';
 
 const statusColors = {
   PENDING: '#f39c12',
@@ -15,6 +16,7 @@ export default function Dashboard() {
   const [orderCount, setOrderCount] = useState(0);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     Promise.all([
@@ -25,11 +27,13 @@ export default function Dashboard() {
       setProductCount(prodRes.data?.data?.totalElements || 0);
       setOrderCount(page.totalElements || 0);
       setOrders(page.content || []);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err) => {
+      setError(err.response?.data?.message || err.message || 'Failed to load dashboard data');
+    }).finally(() => setLoading(false));
   }, []);
 
   const totalRevenue = orders
-    .filter((o) => o.status === 'DELIVERED')
+    .filter((o) => ['PAID', 'SHIPPED', 'DELIVERED'].includes(o.status))
     .reduce((sum, o) => sum + Number(o.totalAmount), 0);
 
   if (loading) return <p>Loading dashboard...</p>;
@@ -37,6 +41,7 @@ export default function Dashboard() {
   return (
     <div style={{ padding: '2rem' }}>
       <h1>Admin Dashboard</h1>
+      {error && <div style={{ marginTop: '1rem' }}><ErrorMessage message={error} /></div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
         {[

@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="footer-container">
         <div className="footer-brand">
           <h3>ShopHub</h3>
-          <p>Your one-stop shop for everything you need.</p>
+          <p>Your one-stop online shop for everything you need.</p>
         </div>
 
         <div className="footer-links">
@@ -20,7 +20,7 @@ export default function Footer() {
           <h4>Contact</h4>
           <p>123 Commerce St</p>
           <p>support@shophub.com</p>
-          <p>(555) 123-4567</p>
+          <p>(+234) 916-4794-335</p>
         </div>
       </div>
 
