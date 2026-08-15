@@ -91,7 +91,7 @@ export default function About() {
         </p>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link to="/products" className="btn btn-primary">Start Shopping</Link>
-          <Link to="/register" className="btn btn-outline">Create an Account</Link>
+          <Link to="/register" className="btn btn-outline">Create an Account now</Link>
         </div>
       </section>
 
