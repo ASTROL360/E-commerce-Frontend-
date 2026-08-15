@@ -59,6 +59,9 @@ export default function Header() {
             <Link to="/products" onClick={() => setMobileMenuOpen(false)}>
               Products
             </Link>
+            <Link to="/about" onClick={() => setMobileMenuOpen(false)}>
+              About
+            </Link>
             {isAdmin && (
               <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
                 Admin
