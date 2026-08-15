@@ -8,7 +8,7 @@ export default function Profile() {
   if (!user) {
     return (
       <div style={{ padding: '2rem', maxWidth: 600, margin: '0 auto' }}>
-        <p>Please log in to view your profile.</p>
+        <p>Please log in to view your profile here.</p>
         <Link to="/login" style={{ color: '#667eea' }}>Login</Link>
       </div>
     );
