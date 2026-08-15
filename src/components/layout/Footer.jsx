@@ -18,7 +18,7 @@ export default function Footer() {
 
         <div className="footer-contact">
           <h4>Contact</h4>
-          <p>123 Commerce St</p>
+          <p>1 Commerce St, Lagos, Nigeria</p>
           <p>support@shophub.com</p>
           <p>(+234) 916-4794-335</p>
         </div>
