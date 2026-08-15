@@ -4,6 +4,7 @@ import AdminLayout from './components/layout/AdminLayout'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import AdminRoute from './components/auth/AdminRoute'
 import Home from './pages/Home'
+import About from './pages/About'
 import ProductList from './pages/products/ProductList'
 import ProductDetail from './pages/products/ProductDetail'
 import Cart from './pages/cart/Cart'
@@ -33,6 +34,7 @@ function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
         <Route path="/oauth2/callback" element={<OAuthCallback />} />
         <Route path="/products" element={<ProductList />} />
         <Route path="/products/:id" element={<ProductDetail />} />

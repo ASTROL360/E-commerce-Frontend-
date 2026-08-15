@@ -55,7 +55,7 @@ export default function Home() {
 
 const heroStyle = {
   textAlign: 'center',
-  padding: '5rem 1rem',
+  padding: '6rem 1rem',
   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   color: '#fff',
 };
