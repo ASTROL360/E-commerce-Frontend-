@@ -102,6 +102,7 @@ export default function About() {
           <p style={pStyle}><strong>Phone:</strong> (+234) 916-4794-335</p>
           <p style={pStyle}><strong>Address: </strong>1 Commerce St, Lagos, Nigeria.</p>
         </div>
+        
       </section>
     </div>
   );
