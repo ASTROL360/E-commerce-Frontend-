@@ -100,7 +100,7 @@ export default function About() {
         <div style={{ ...cardStyle, maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
           <p style={pStyle}><strong>Email:</strong> support@shophub.com</p>
           <p style={pStyle}><strong>Phone:</strong> (+234) 916-4794-335</p>
-          <p style={pStyle}><strong>Address:</strong> 1 Commerce St, Lagos, Nigeria</p>
+          <p style={pStyle}><strong>Address: </strong> 1 Commerce St, Lagos, Nigeria.</p>
         </div>
       </section>
     </div>
