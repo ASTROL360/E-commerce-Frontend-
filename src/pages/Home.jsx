@@ -85,10 +85,10 @@ const catCardStyle = {
   color: '#333',
   textAlign: 'center',
   border: '1px solid #e0e0e0',
+  
 };
 const linkStyle = {
   display: 'inline-block',
-  
   padding: '0.75rem 2rem',
   background: '#667eea',
   color: '#fff',
