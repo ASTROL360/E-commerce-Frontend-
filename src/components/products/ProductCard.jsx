@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { getPrimaryProductImage } from '../../utils/productImageUtils';
+import { getPrimaryProductImage, getCloudinaryUrl } from '../../utils/productImageUtils';
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart();
   const { isAdmin, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [addError, setAddError] = useState('');
   const outOfStock = product.stockQuantity === 0;
   const primaryImage = getPrimaryProductImage(product);
 
@@ -18,7 +20,13 @@ export default function ProductCard({ product }) {
       navigate(`/login?returnUrl=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
-    await addItem(product.id, 1);
+    try {
+      setAddError('');
+      await addItem(product.id, 1);
+    } catch (err) {
+      setAddError(err.message || 'Failed to add to cart');
+      setTimeout(() => setAddError(''), 3000);
+    }
   };
 
   return (
@@ -26,7 +34,7 @@ export default function ProductCard({ product }) {
       <Link to={`/products/${product.id}`} className="product-card-link">
         <div className="product-card-image">
           {primaryImage ? (
-            <img src={primaryImage} alt={product.name} />
+            <img src={getCloudinaryUrl(primaryImage, 400)} alt={product.name} />
           ) : (
             <div className="product-card-placeholder">No Image</div>
           )}
@@ -43,13 +51,16 @@ export default function ProductCard({ product }) {
       </Link>
 
       {!isAdmin && (
-        <button
-          className={`btn btn-primary product-card-btn ${outOfStock ? 'btn-disabled' : ''}`}
-          onClick={handleAddToCart}
-          disabled={outOfStock}
-        >
-          {outOfStock ? 'Out of Stock' : 'Add to Cart'}
-        </button>
+        <>
+          <button
+            className={`btn btn-primary product-card-btn ${outOfStock ? 'btn-disabled' : ''}`}
+            onClick={handleAddToCart}
+            disabled={outOfStock}
+          >
+            {outOfStock ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+          {addError && <span className="product-card-error">{addError}</span>}
+        </>
       )}
     </div>
   );
