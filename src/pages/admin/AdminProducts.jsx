@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import productService from '../../services/productService';
+import { unwrap } from '../../services/api';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import './admin.css';
 
 export default function AdminProducts() {
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const loadProducts = () => {
     setLoading(true);
     productService.getAll({ page: 0, size: 100, sortBy: 'id', direction: 'asc' }).then((res) => {
-      setProducts(res.data?.data?.content || []);
-    }).catch(() => {}).finally(() => setLoading(false));
+      setProducts(unwrap(res)?.content || []);
+    }).catch(() => {
+      setError('Failed to load products');
+    }).finally(() => setLoading(false));
   };
 
   useEffect(() => { loadProducts(); }, []);
@@ -21,18 +28,22 @@ export default function AdminProducts() {
   );
 
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      productService.delete(id).then(() => {
-        loadProducts();
-      }).catch(() => alert('Failed to delete product'));
-    }
+    setDeleteTarget(id);
+  };
+
+  const confirmDelete = () => {
+    productService.delete(deleteTarget).then(() => {
+      loadProducts();
+    }).catch(() => {
+      setError('Failed to delete product');
+    }).finally(() => setDeleteTarget(null));
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="admin-products-page">
+      <div className="admin-products-header">
         <h1>Products</h1>
-        <Link to="/admin/products/new" style={addBtn}>Add Product</Link>
+        <Link to="/admin/products/new" className="admin-products-add-btn">Add Product</Link>
       </div>
 
       <input
@@ -40,34 +51,46 @@ export default function AdminProducts() {
         placeholder="Search products..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        style={searchStyle}
+        className="admin-products-search"
+      />
+
+      {error && <p className="admin-products-error">{error}</p>}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Product"
+        message="Are you sure you want to delete this product? This action cannot be undone."
+        confirmText="Delete"
+        danger
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
 
       {loading ? (
         <p>Loading products...</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+        <table className="admin-products-table">
           <thead>
-            <tr style={{ borderBottom: '2px solid #ddd', textAlign: 'left' }}>
-              <th style={thStyle}>ID</th>
-              <th style={thStyle}>Name</th>
-              <th style={thStyle}>Category</th>
-              <th style={thStyle}>Price</th>
-              <th style={thStyle}>Stock</th>
-              <th style={thStyle}>Actions</th>
+            <tr className="admin-products-thead-row">
+              <th className="admin-products-th">ID</th>
+              <th className="admin-products-th">Name</th>
+              <th className="admin-products-th">Category</th>
+              <th className="admin-products-th">Price</th>
+              <th className="admin-products-th">Stock</th>
+              <th className="admin-products-th">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((p) => (
-              <tr key={p.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={tdStyle}>{p.id}</td>
-                <td style={tdStyle}>{p.name}</td>
-                <td style={tdStyle}>{p.categoryName || '-'}</td>
-                <td style={tdStyle}>₦{Number(p.price).toFixed(2)}</td>
-                <td style={tdStyle}>{p.stockQuantity}</td>
-                <td style={tdStyle}>
-                  <Link to={`/admin/products/${p.id}/edit`} style={editBtn}>Edit</Link>{' '}
-                  <button onClick={() => handleDelete(p.id)} style={deleteBtn}>Delete</button>
+              <tr key={p.id} className="admin-products-tbody-row">
+                <td className="admin-products-td">{p.id}</td>
+                <td className="admin-products-td">{p.name}</td>
+                <td className="admin-products-td">{p.categoryName || '-'}</td>
+                <td className="admin-products-td">₦{Number(p.price).toFixed(2)}</td>
+                <td className="admin-products-td">{p.stockQuantity}</td>
+                <td className="admin-products-td">
+                  <Link to={`/admin/products/${p.id}/edit`} className="admin-products-edit-btn">Edit</Link>{' '}
+                  <button onClick={() => handleDelete(p.id)} className="admin-products-delete-btn">Delete</button>
                 </td>
               </tr>
             ))}
@@ -77,10 +100,3 @@ export default function AdminProducts() {
     </div>
   );
 }
-
-const searchStyle = { width: '100%', maxWidth: 400, padding: '0.6rem 1rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', marginTop: '0.5rem' };
-const addBtn = { padding: '0.5rem 1rem', background: '#00b894', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 };
-const thStyle = { padding: '0.75rem 0.5rem' };
-const tdStyle = { padding: '0.75rem 0.5rem' };
-const editBtn = { padding: '0.3rem 0.75rem', background: '#3498db', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', textDecoration: 'none', fontSize: '0.85rem' };
-const deleteBtn = { padding: '0.3rem 0.75rem', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' };
