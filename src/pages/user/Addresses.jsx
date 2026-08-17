@@ -1,42 +1,77 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import addressService from '../../services/addressService';
+import { unwrap } from '../../services/api';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import './userPages.css';
 
-const emptyForm = { label: '', fullName: '', line1: '', line2: '', city: '', state: '', postalCode: '', country: '', phone: '', isDefault: false };
+const addressSchema = z.object({
+  label: z.string().optional().or(z.literal('')),
+  fullName: z.string().min(1, 'Full name is required'),
+  line1: z.string().min(1, 'Address line 1 is required'),
+  line2: z.string().optional().or(z.literal('')),
+  city: z.string().min(1, 'City is required'),
+  state: z.string().optional().or(z.literal('')),
+  postalCode: z.string().min(1, 'Postal code is required'),
+  country: z.string().min(1, 'Country is required'),
+  phone: z.string().optional().or(z.literal('')),
+  isDefault: z.boolean(),
+});
 
 export default function Addresses() {
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState(emptyForm);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('returnUrl');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+      label: '',
+      fullName: '',
+      line1: '',
+      line2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: '',
+      phone: '',
+      isDefault: false,
+    },
+  });
 
   const loadAddresses = () => {
     setLoading(true);
     addressService.getAll().then((res) => {
-      setAddresses(res.data?.data || []);
-    }).catch(() => {}).finally(() => setLoading(false));
+      setAddresses(unwrap(res) || []);
+    }).catch(() => {
+      setError('Failed to load addresses');
+    }).finally(() => setLoading(false));
   };
 
   useEffect(() => { loadAddresses(); }, []);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     try {
       if (editingId) {
-        await addressService.update(editingId, form);
+        await addressService.update(editingId, data);
       } else {
-        await addressService.create(form);
+        await addressService.create(data);
       }
-      setForm(emptyForm);
+      reset();
       setEditingId(null);
       setShowForm(false);
       if (returnUrl) {
@@ -45,105 +80,139 @@ export default function Addresses() {
         loadAddresses();
       }
     } catch (err) {
-      const data = err.response?.data;
-      const fieldErrors = data?.data && typeof data.data === 'object'
-        ? Object.values(data.data).join('. ')
+      const respData = err.response?.data;
+      const fieldErrors = respData?.data && typeof respData.data === 'object'
+        ? Object.values(respData.data).join('. ')
         : '';
       const status = err.response?.status ? ` (HTTP ${err.response.status})` : '';
-      alert((data?.message || fieldErrors || 'Failed to save address') + status + '. Please check your details and try again.');
+      setError((respData?.message || fieldErrors || 'Failed to save address') + status + '. Please check your details and try again.');
     }
   };
 
   const handleEdit = (addr) => {
-    setForm({ label: addr.label, fullName: addr.fullName, line1: addr.line1, line2: addr.line2 || '', city: addr.city, state: addr.state, postalCode: addr.postalCode, country: addr.country, phone: addr.phone || '', isDefault: addr.isDefault || false });
+    reset({
+      label: addr.label || '',
+      fullName: addr.fullName,
+      line1: addr.line1,
+      line2: addr.line2 || '',
+      city: addr.city,
+      state: addr.state || '',
+      postalCode: addr.postalCode,
+      country: addr.country,
+      phone: addr.phone || '',
+      isDefault: addr.isDefault || false,
+    });
     setEditingId(addr.id);
     setShowForm(true);
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Delete this address?')) {
-      addressService.delete(id).then(() => {
-        loadAddresses();
-      }).catch(() => alert('Failed to delete address'));
-    }
+    setDeleteTarget(id);
+  };
+
+  const confirmDelete = () => {
+    addressService.delete(deleteTarget).then(() => {
+      loadAddresses();
+    }).catch(() => {
+      setError('Failed to delete address');
+    }).finally(() => setDeleteTarget(null));
   };
 
   const startAdd = () => {
-    setForm(emptyForm);
+    reset({
+      label: '',
+      fullName: '',
+      line1: '',
+      line2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: '',
+      phone: '',
+      isDefault: false,
+    });
     setEditingId(null);
     setShowForm(true);
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="addresses-page">
+      <div className="addresses-header">
         <h1>My Addresses</h1>
-        <button onClick={startAdd} style={addBtn}>Add New Address</button>
+        <button onClick={startAdd} className="addresses-btn">Add New Address</button>
       </div>
 
+      {error && <p className="addresses-error">{error}</p>}
+
       {showForm && (
-        <form onSubmit={handleSubmit} style={formStyle}>
+        <form onSubmit={handleSubmit(onSubmit)} className="addresses-form">
           <h3>{editingId ? 'Edit Address' : 'New Address'}</h3>
-          <div style={gridStyle}>
+          <div className="addresses-grid">
             {[
-              { name: 'label', label: 'Label', type: 'text' },
-              { name: 'fullName', label: 'Full Name', type: 'text' },
-              { name: 'line1', label: 'Address Line 1', type: 'text' },
-              { name: 'line2', label: 'Address Line 2', type: 'text' },
-              { name: 'city', label: 'City', type: 'text' },
-              { name: 'state', label: 'State', type: 'text' },
-              { name: 'postalCode', label: 'Postal Code', type: 'text' },
-              { name: 'country', label: 'Country', type: 'text' },
-              { name: 'phone', label: 'Phone', type: 'text' },
+              { name: 'label', label: 'Label' },
+              { name: 'fullName', label: 'Full Name' },
+              { name: 'line1', label: 'Address Line 1' },
+              { name: 'line2', label: 'Address Line 2' },
+              { name: 'city', label: 'City' },
+              { name: 'state', label: 'State' },
+              { name: 'postalCode', label: 'Postal Code' },
+              { name: 'country', label: 'Country' },
+              { name: 'phone', label: 'Phone' },
             ].map((f) => (
-              <div key={f.name} style={{ marginBottom: '0.75rem' }}>
+              <div key={f.name} className="addresses-field">
                 <label>{f.label}</label>
-                <input name={f.name} value={form[f.name]} onChange={handleChange} type={f.type} required={['fullName', 'line1', 'city', 'postalCode', 'country'].includes(f.name)} style={inputStyle} />
+                <input
+                  {...register(f.name)}
+                  type="text"
+                  className="addresses-input"
+                />
+                {errors[f.name] && (
+                  <p className="addresses-field-error">{errors[f.name].message}</p>
+                )}
               </div>
             ))}
           </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <input type="checkbox" name="isDefault" checked={form.isDefault} onChange={handleChange} />
+          <label className="addresses-checkbox-label">
+            <input type="checkbox" {...register('isDefault')} />
             Set as default address
           </label>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button type="submit" style={saveBtn}>Save</button>
-            <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} style={cancelBtn}>Cancel</button>
+          <div className="addresses-form-actions">
+            <button type="submit" className="addresses-save-btn">Save</button>
+            <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="addresses-cancel-btn">Cancel</button>
           </div>
         </form>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+      <div className="addresses-list">
         {addresses.map((addr) => (
-          <div key={addr.id} style={addrCardStyle}>
-            <div style={{ flex: 1 }}>
+          <div key={addr.id} className="addresses-card">
+            <div className="addresses-card-body">
               <strong>{addr.label}</strong> - {addr.fullName}
-              {addr.isDefault && <span style={defaultBadge}>Default</span>}
-              <p style={{ margin: '0.25rem 0 0', color: '#555' }}>
+              {addr.isDefault && <span className="addresses-default-badge">Default</span>}
+              <p className="addresses-card-info">
                 {addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}<br />
                 {addr.city}, {addr.state} {addr.postalCode}<br />
                 {addr.country}
                 {addr.phone && <><br />{addr.phone}</>}
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem', alignSelf: 'flex-start' }}>
-              <button onClick={() => handleEdit(addr)} style={editBtn}>Edit</button>
-              <button onClick={() => handleDelete(addr.id)} style={deleteBtn}>Delete</button>
+            <div className="addresses-card-actions">
+              <button onClick={() => handleEdit(addr)} className="addresses-edit-btn">Edit</button>
+              <button onClick={() => handleDelete(addr.id)} className="addresses-delete-btn">Delete</button>
             </div>
           </div>
         ))}
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Address"
+        message="Are you sure you want to delete this address?"
+        confirmText="Delete"
+        danger
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
-
-const addBtn = { padding: '0.5rem 1rem', background: '#667eea', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 };
-const formStyle = { padding: '1.5rem', background: '#f8f9fa', borderRadius: '8px', marginTop: '1rem' };
-const gridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem' };
-const inputStyle = { width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #ccc', borderRadius: '4px', marginTop: '0.25rem', boxSizing: 'border-box' };
-const saveBtn = { padding: '0.6rem 1.5rem', background: '#00b894', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 };
-const cancelBtn = { padding: '0.6rem 1.5rem', background: '#ccc', color: '#333', border: 'none', borderRadius: '6px', cursor: 'pointer' };
-const addrCardStyle = { display: 'flex', justifyContent: 'space-between', padding: '1rem', background: '#fff', border: '1px solid #e0e0e0', borderRadius: '8px', gap: '1rem' };
-const defaultBadge = { marginLeft: '0.5rem', background: '#667eea', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem' };
-const editBtn = { padding: '0.4rem 0.75rem', background: '#3498db', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' };
-const deleteBtn = { padding: '0.4rem 0.75rem', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' };
