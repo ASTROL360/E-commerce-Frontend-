@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { getCloudinaryUrl } from '../../utils/productImageUtils';
 
 export default function Cart() {
   const { cart, updateQuantity, removeItem, clearCart, subtotal, loading } = useCart();
@@ -10,7 +11,7 @@ export default function Cart() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+      <div className="cart-loading">
         <h2>Loading your cart...</h2>
       </div>
     );
@@ -18,122 +19,71 @@ export default function Cart() {
 
   if (cart.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+      <div className="cart-empty">
         <h2>Your cart is empty</h2>
-        <Link to="/products" style={linkStyle}>Continue Shopping</Link>
+        <Link to="/products" className="cart-empty-link">Continue Shopping</Link>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: '2rem auto', padding: '0 1rem' }}>
+    <div className="cart-page">
       <h1>Shopping Cart</h1>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+      <div className="cart-items">
         {cart.map((item) => (
-          <div key={item.id} style={itemStyle}>
+          <div key={item.id} className="cart-item">
             <img
-              src={item.imageUrl || '/placeholder.png'}
+              src={getCloudinaryUrl(item.imageUrl, 160) || '/placeholder.png'}
               alt={item.productName}
-              style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6 }}
+              className="cart-item-img"
             />
-            <div style={{ flex: 1 }}>
-              <Link to={`/products/${item.productId}`} style={{ color: '#333', textDecoration: 'none' }}>
-                <h3 style={{ margin: 0 }}>{item.productName}</h3>
+            <div className="cart-item-details">
+              <Link to={`/products/${item.productId}`} className="cart-item-link">
+                <h3 className="cart-item-name">{item.productName}</h3>
               </Link>
-              <p style={{ margin: '0.25rem 0', color: '#666' }}>₦{Number(item.unitPrice).toFixed(2)}</p>
+              <p className="cart-item-price">₦{Number(item.unitPrice).toFixed(2)}</p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={qtyBtn}>-</button>
+            <div className="cart-item-qty">
+              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="cart-qty-btn">-</button>
               <span>{item.quantity}</span>
-              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={qtyBtn}>+</button>
+              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="cart-qty-btn">+</button>
             </div>
-            <p style={{ fontWeight: 600, minWidth: 80, textAlign: 'right' }}>
+            <p className="cart-item-total">
               ₦{(Number(item.unitPrice) * item.quantity).toFixed(2)}
             </p>
-            <button onClick={() => removeItem(item.id)} style={removeBtn}>&times;</button>
+            <button onClick={() => removeItem(item.id)} className="cart-remove-btn">&times;</button>
           </div>
 
         ))}
-        <button onClick={clearCart} style={{ ...btnStyle, background: '#e74c3c', marginTop: '1rem' }}>Clear Cart</button>
+        <button onClick={clearCart} className="cart-btn cart-btn--danger cart-clear-btn">Clear Cart</button>
       </div>
 
-      <div style={summaryStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+      <div className="cart-summary">
+        <div className="cart-summary-row">
           <span>Subtotal</span>
           <span>₦{subtotal.toFixed(2)}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+        <div className="cart-summary-row">
           <span>Shipping</span>
           <span>{shipping === 0 ? 'Free' : `₦${shipping.toFixed(2)}`}</span>
         </div>
         <hr />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.1rem' }}>
+        <div className="cart-summary-total">
           <span>Total</span>
           <span>₦{total.toFixed(2)}</span>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+        <div className="cart-summary-actions">
           {user ? (
-            <Link to="/checkout" style={{ ...btnStyle, textAlign: 'center', flex: 1 }}>Proceed to Checkout</Link>
+            <Link to="/checkout" className="cart-btn cart-btn--checkout">Proceed to Checkout</Link>
           ) : (
-            <Link to="/login?returnUrl=/checkout" style={{ ...btnStyle, textAlign: 'center', flex: 1 }}>Login to Checkout</Link>
+            <Link to="/login?returnUrl=/checkout" className="cart-btn cart-btn--checkout">Login to Checkout</Link>
           )}
         </div>
-        <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
-          <Link to="/products" style={{ color: '#667eea' }}>Continue Shopping</Link>
+        <div className="cart-summary-continue">
+          <Link to="/products" className="cart-continue-link">Continue Shopping</Link>
         </div>
       </div>
     </div>
   );
 }
-
-const itemStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1rem',
-  padding: '1rem',
-  background: '#fff',
-  borderRadius: '8px',
-  border: '1px solid #eee',
-};
-const qtyBtn = {
-  width: 32,
-  height: 32,
-  border: '1px solid #ccc',
-  borderRadius: '4px',
-  background: '#fff',
-  cursor: 'pointer',
-};
-const removeBtn = {
-  background: 'none',
-  border: 'none',
-  color: '#e74c3c',
-  fontSize: '1.25rem',
-  cursor: 'pointer',
-};
-const summaryStyle = {
-  marginTop: '2rem',
-  padding: '1.5rem',
-  background: '#f8f9fa',
-  borderRadius: '8px',
-};
-const btnStyle = {
-  display: 'block',
-  padding: '0.75rem 1.5rem',
-  background: '#667eea',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '8px',
-  cursor: 'pointer',
-  fontWeight: 600,
-  textDecoration: 'none',
-};
-const linkStyle = {
-  display: 'inline-block',
-  padding: '0.75rem 2rem',
-  background: '#667eea',
-  color: '#fff',
-  borderRadius: '8px',
-  textDecoration: 'none',
-  marginTop: '1rem',
-};
