@@ -46,7 +46,6 @@ function App() {
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/cancel" element={<PaymentCancel />} />
         <Route path="/payment/verify" element={<PaymentVerify />} />
-        <Route path="/" element={<Home/>}/>
 
         <Route element={<ProtectedRoute />}>
           <Route path="/checkout" element={<Checkout />} />
