@@ -1,9 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import productService from '../../services/productService';
 import categoryService from '../../services/categoryService';
+import { unwrap } from '../../services/api';
 import Loading from '../../components/common/Loading';
-import { fileToDataUrl } from '../../utils/productImageUtils';
+import { uploadToCloudinary } from '../../services/cloudinaryService';
+import './admin.css';
+
+const schema = z.object({
+  name: z.string().min(1, 'Product name is required'),
+  price: z.coerce.number().min(0.01, 'Price must be at least 0.01'),
+  stockQuantity: z.coerce.number().min(0, 'Stock cannot be negative'),
+  categoryId: z.string().optional(),
+  description: z.string().optional(),
+});
 
 const EMPTY_VARIANTS = [
   { colorName: '', imageUrl: '' },
@@ -19,90 +32,93 @@ export default function AdminProductForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState([]);
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-    price: '',
-    stockQuantity: '',
-    imageUrl: '',
-    categoryId: '',
-    colorVariants: EMPTY_VARIANTS,
+  const [uploading, setUploading] = useState({ main: false, variants: {} });
+  const [imageUrl, setImageUrl] = useState('');
+  const [colorVariants, setColorVariants] = useState(EMPTY_VARIANTS);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: '',
+      price: '',
+      stockQuantity: '',
+      categoryId: '',
+      description: '',
+    },
   });
 
   useEffect(() => {
     categoryService.getAll().then((res) => {
-      setCategories(res.data?.data || []);
-    }).catch(() => {});
+      setCategories(unwrap(res) || []);
+    }).catch(() => {
+      setCategories([]);
+    });
   }, []);
 
   useEffect(() => {
     if (isEditing) {
       setLoading(true);
       productService.getById(id).then((res) => {
-        const p = res.data?.data;
+        const p = unwrap(res);
         if (p) {
           const loaded = (p.colorVariants || [])
             .filter((v) => v && v.imageUrl)
             .map((v) => ({ colorName: v.colorName || '', imageUrl: v.imageUrl || '' }));
-          setForm({
+          reset({
             name: p.name || '',
-            description: p.description || '',
             price: p.price || '',
             stockQuantity: p.stockQuantity || '',
-            imageUrl: p.imageUrl || '',
-            categoryId: p.categoryId || '',
-            colorVariants: [...loaded, ...EMPTY_VARIANTS].slice(0, 4),
+            categoryId: p.categoryId ? String(p.categoryId) : '',
+            description: p.description || '',
           });
+          setImageUrl(p.imageUrl || '');
+          setColorVariants([...loaded, ...EMPTY_VARIANTS].slice(0, 4));
         }
       }).catch(() => setError('Failed to load product')).finally(() => setLoading(false));
     }
-  }, [id, isEditing]);
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  }, [id, isEditing, reset]);
 
   const handleVariantChange = (index, field, value) => {
-    const variants = form.colorVariants.map((v, i) => (i === index ? { ...v, [field]: value } : v));
-    setForm({ ...form, colorVariants: variants });
+    setColorVariants((prev) => prev.map((v, i) => (i === index ? { ...v, [field]: value } : v)));
   };
 
   const handleMainImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploading((prev) => ({ ...prev, main: true }));
     try {
-      const dataUrl = await fileToDataUrl(file);
-      setForm({ ...form, imageUrl: dataUrl });
+      const url = await uploadToCloudinary(file);
+      setImageUrl(url);
     } catch {
-      setError('Failed to process image');
+      setError('Failed to upload image');
+    } finally {
+      setUploading((prev) => ({ ...prev, main: false }));
     }
   };
 
   const handleVariantImageChange = async (index, file) => {
     if (!file) return;
+    setUploading((prev) => ({ ...prev, variants: { ...prev.variants, [index]: true } }));
     try {
-      const dataUrl = await fileToDataUrl(file);
-      handleVariantChange(index, 'imageUrl', dataUrl);
+      const url = await uploadToCloudinary(file);
+      handleVariantChange(index, 'imageUrl', url);
     } catch {
-      setError('Failed to process image');
+      setError('Failed to upload image');
+    } finally {
+      setUploading((prev) => ({ ...prev, variants: { ...prev.variants, [index]: false } }));
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setError('');
 
-    if (!form.name || !form.price || !form.stockQuantity) {
-      setError('Name, price, and stock are required');
-      return;
-    }
-
     const payload = {
-      ...form,
-      price: Number(form.price),
-      stockQuantity: Number(form.stockQuantity),
-      categoryId: form.categoryId ? Number(form.categoryId) : null,
-      colorVariants: form.colorVariants
+      ...data,
+      price: Number(data.price),
+      stockQuantity: Number(data.stockQuantity),
+      categoryId: data.categoryId ? Number(data.categoryId) : null,
+      imageUrl,
+      colorVariants: colorVariants
         .filter((v) => v.imageUrl.trim())
         .map((v) => ({ colorName: v.colorName.trim(), imageUrl: v.imageUrl.trim() })),
     };
@@ -125,47 +141,61 @@ export default function AdminProductForm() {
   if (loading) return <Loading />;
 
   return (
-    <div style={{ maxWidth: 700, padding: '2rem' }}>
-      <Link to="/admin/products" style={{ color: '#667eea' }}>&larr; Back to Products</Link>
+    <div className="admin-product-form-page">
+      <Link to="/admin/products" className="admin-product-form-back">&larr; Back to Products</Link>
       <h1>{isEditing ? 'Edit Product' : 'Add Product'}</h1>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="admin-product-form-error">{error}</p>}
 
-      <form onSubmit={handleSubmit} style={formStyle}>
-        {[
-          { name: 'name', label: 'Product Name', type: 'text' },
-          { name: 'price', label: 'Price', type: 'number' },
-          { name: 'stockQuantity', label: 'Stock Quantity', type: 'number' },
-        ].map((f) => (
-          <div key={f.name} style={fieldStyle}>
-            <label>{f.label}</label>
-            <input
-              name={f.name}
-              type={f.type}
-              value={form[f.name]}
-              onChange={handleChange}
-              required
-              style={inputStyle}
-            />
-          </div>
-        ))}
+      <form onSubmit={handleSubmit(onSubmit)} className="admin-product-form-card">
+        <div className="admin-product-form-field">
+          <label>Product Name</label>
+          <input
+            type="text"
+            className="admin-product-form-input"
+            {...register('name')}
+          />
+          {errors.name && <p className="admin-product-form-field-error">{errors.name.message}</p>}
+        </div>
 
-        <div style={fieldStyle}>
+        <div className="admin-product-form-field">
+          <label>Price</label>
+          <input
+            type="number"
+            step="0.01"
+            className="admin-product-form-input"
+            {...register('price')}
+          />
+          {errors.price && <p className="admin-product-form-field-error">{errors.price.message}</p>}
+        </div>
+
+        <div className="admin-product-form-field">
+          <label>Stock Quantity</label>
+          <input
+            type="number"
+            className="admin-product-form-input"
+            {...register('stockQuantity')}
+          />
+          {errors.stockQuantity && <p className="admin-product-form-field-error">{errors.stockQuantity.message}</p>}
+        </div>
+
+        <div className="admin-product-form-field">
           <label>Product Image</label>
-          <input type="file" accept="image/*" onChange={handleMainImageChange} style={fileInputStyle} />
-          {form.imageUrl ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
-              <img src={form.imageUrl} alt="Product" style={mainPreviewStyle} />
-              <button type="button" onClick={() => setForm({ ...form, imageUrl: '' })} style={removeImgBtn}>Remove</button>
+          <input type="file" accept="image/*" onChange={handleMainImageChange} className="admin-product-form-file" disabled={uploading.main} />
+          {uploading.main && <p className="admin-product-form-hint">Uploading...</p>}
+          {imageUrl ? (
+            <div className="admin-product-form-preview-row">
+              <img src={imageUrl} alt="Product" className="admin-product-form-main-preview" />
+              <button type="button" onClick={() => setImageUrl('')} className="admin-product-form-remove-img">Remove</button>
             </div>
           ) : (
-            <p style={hintStyle}>Choose a JPG or PNG file to upload.</p>
+            <p className="admin-product-form-hint">Choose a JPG or PNG file to upload.</p>
           )}
         </div>
 
-        <div style={fieldStyle}>
+        <div className="admin-product-form-field">
           <label>Category</label>
-          <select name="categoryId" value={form.categoryId} onChange={handleChange} style={inputStyle}>
+          <select className="admin-product-form-input" {...register('categoryId')}>
             <option value="">Select Category</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -173,67 +203,50 @@ export default function AdminProductForm() {
           </select>
         </div>
 
-        <div style={fieldStyle}>
+        <div className="admin-product-form-field">
           <label>Color Variants (up to 4 colors)</label>
-          <p style={{ margin: '0.25rem 0 0.75rem', fontSize: '0.85rem', color: '#777' }}>
+          <p className="admin-product-form-variant-hint">
             Add a color name and upload an image for each color of this product.
           </p>
-          {form.colorVariants.map((variant, index) => (
-            <div key={index} style={variantRowStyle}>
+          {colorVariants.map((variant, index) => (
+            <div key={index} className="admin-product-form-variant-row">
               <input
-                name={`colorName-${index}`}
                 placeholder="Color (e.g. Black)"
                 value={variant.colorName}
                 onChange={(e) => handleVariantChange(index, 'colorName', e.target.value)}
-                style={variantColorInputStyle}
+                className="admin-product-form-variant-color"
               />
               <input
-                name={`variantUrl-${index}`}
                 type="file"
                 accept="image/*"
                 onChange={(e) => handleVariantImageChange(index, e.target.files?.[0])}
-                style={variantFileInputStyle}
+                className="admin-product-form-variant-file"
+                disabled={uploading.variants[index]}
               />
+              {uploading.variants[index] && <span className="admin-product-form-variant-uploading">Uploading...</span>}
               {variant.imageUrl ? (
-                <img src={variant.imageUrl} alt={variant.colorName || `Variant ${index + 1}`} style={variantPreviewStyle} />
+                <img src={variant.imageUrl} alt={variant.colorName || `Variant ${index + 1}`} className="admin-product-form-variant-preview" />
               ) : (
-                <div style={variantPreviewPlaceholder}>No image</div>
+                <div className="admin-product-form-variant-placeholder">No image</div>
               )}
             </div>
           ))}
         </div>
 
-        <div style={fieldStyle}>
+        <div className="admin-product-form-field">
           <label>Description</label>
           <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
             rows={4}
-            style={{ ...inputStyle, resize: 'vertical' }}
+            className="admin-product-form-textarea"
+            {...register('description')}
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button type="submit" style={saveBtn}>{isEditing ? 'Update' : 'Create'} Product</button>
-          <Link to="/admin/products" style={{ ...cancelBtn, textDecoration: 'none', textAlign: 'center', lineHeight: '2.5rem' }}>Cancel</Link>
+        <div className="admin-product-form-actions">
+          <button type="submit" className="admin-product-form-save">{isEditing ? 'Update' : 'Create'} Product</button>
+          <Link to="/admin/products" className="admin-product-form-cancel">Cancel</Link>
         </div>
       </form>
     </div>
   );
 }
-
-const formStyle = { padding: '1.5rem', background: '#f8f9fa', borderRadius: '8px' };
-const fieldStyle = { marginBottom: '1rem' };
-const inputStyle = { width: '100%', padding: '0.6rem 1rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', marginTop: '0.25rem', boxSizing: 'border-box' };
-const variantRowStyle = { display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' };
-const variantColorInputStyle = { width: '30%', padding: '0.5rem 0.75rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '0.9rem', boxSizing: 'border-box' };
-const fileInputStyle = { width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '0.9rem', background: '#fff', boxSizing: 'border-box' };
-const variantFileInputStyle = { flex: 1, padding: '0.35rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '0.85rem', background: '#fff', boxSizing: 'border-box', maxWidth: '100%' };
-const mainPreviewStyle = { width: 120, height: 120, objectFit: 'cover', borderRadius: '8px', border: '1px solid #ddd' };
-const removeImgBtn = { padding: '0.4rem 0.75rem', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' };
-const hintStyle = { margin: '0.25rem 0 0', fontSize: '0.85rem', color: '#777' };
-const variantPreviewStyle = { width: 44, height: 44, objectFit: 'cover', borderRadius: '6px', border: '1px solid #ddd' };
-const variantPreviewPlaceholder = { width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', border: '1px dashed #ccc', color: '#999', fontSize: '0.65rem', textAlign: 'center', boxSizing: 'border-box' };
-const saveBtn = { padding: '0.75rem 1.5rem', background: '#00b894', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 };
-const cancelBtn = { padding: '0.75rem 1.5rem', background: '#ccc', color: '#333', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'inline-block' };
