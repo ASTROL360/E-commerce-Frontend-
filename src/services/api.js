@@ -33,4 +33,8 @@ api.interceptors.response.use(
   }
 )
 
+export function unwrap(res) {
+  return res.data?.data ?? res.data ?? null;
+}
+
 export default api
