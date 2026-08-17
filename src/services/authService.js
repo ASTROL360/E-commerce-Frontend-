@@ -1,6 +1,7 @@
 import api from './api'
 
-export const GOOGLE_AUTH_URL = 'https://ecommerce-backend-jdp8.onrender.com/oauth2/authorization/google'
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://ecommerce-backend-jdp8.onrender.com';
+export const GOOGLE_AUTH_URL = `${BACKEND_URL}/oauth2/authorization/google`
 
 const authService = {
   login: (email, password) => api.post('/auth/login', { email, password }),
