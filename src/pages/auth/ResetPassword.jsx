@@ -1,38 +1,35 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import PasswordInput from '../../components/common/PasswordInput';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import authService from '../../services/authService';
+
+const schema = z.object({
+  pin: z.string().min(4, 'PIN must be at least 4 digits').regex(/^\d+$/, 'PIN must contain only digits'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+});
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email') || '';
-  const [pin, setPin] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = async (data) => {
     setError('');
-
-    if (!/^\d{6}$/.test(pin)) {
-      setError('Please enter a valid 6-digit PIN');
-      return;
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
     setLoading(true);
     try {
-      await authService.resetPassword(pin, password);
+      await authService.resetPassword(data.pin, data.newPassword);
       setSuccess(true);
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to reset password');
@@ -43,65 +40,64 @@ export default function ResetPassword() {
 
   if (success) {
     return (
-      <div style={containerStyle}>
-        <div style={formCardStyle}>
+      <div className="auth-page">
+        <div className="auth-card">
           <h1>Password Reset</h1>
           <p>Your password has been successfully reset.</p>
-          <Link to="/login" style={{ color: '#667eea', fontWeight: 600 }}>Go to Login</Link>
+          <Link to="/login" className="auth-link-center">Go to Login</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={containerStyle}>
-      <div style={formCardStyle}>
+    <div className="auth-page">
+      <div className="auth-card">
         <h1>Reset Password</h1>
-        {error && <p style={{ color: 'red', fontSize: '0.9rem' }}>{error}</p>}
-        {email && <p style={{ color: '#666', fontSize: '0.85rem', marginBottom: '1rem' }}>Resetting for: <strong>{email}</strong></p>}
+        {error && <p className="auth-error-global">{error}</p>}
+        {email && <p className="auth-description">Resetting for: <strong>{email}</strong></p>}
 
-        <form onSubmit={handleSubmit}>
-          <div style={fieldStyle}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="auth-field">
             <label>6-Digit PIN</label>
             <input
               type="text"
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              {...register('pin')}
               placeholder="000000"
-              required
               maxLength={6}
-              style={{ ...inputStyle, textAlign: 'center', fontSize: '1.25rem', letterSpacing: '0.5rem', fontFamily: 'monospace' }}
+              className="auth-input auth-pin-input"
             />
+            {errors.pin && <p className="auth-error">{errors.pin.message}</p>}
           </div>
 
-          <PasswordInput
-            label="New Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <PasswordInput
-            label="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
+          <div className="auth-field">
+            <label>New Password</label>
+            <input
+              type="password"
+              {...register('newPassword')}
+              className="auth-input"
+            />
+            {errors.newPassword && <p className="auth-error">{errors.newPassword.message}</p>}
+          </div>
+          <div className="auth-field">
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              {...register('confirmPassword')}
+              className="auth-input"
+            />
+            {errors.confirmPassword && <p className="auth-error">{errors.confirmPassword.message}</p>}
+          </div>
 
-          <button type="submit" disabled={loading} style={btnStyle}>
+          <button type="submit" disabled={loading} className="auth-btn">
             {loading ? 'Resetting...' : 'Reset Password'}
           </button>
 
-          <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-            <Link to="/forgot-password" style={{ color: '#667eea' }}>&larr; Get new PIN</Link>
+          <div className="auth-link">
+            <Link to="/forgot-password" className="auth-back-link">&larr; Get new PIN</Link>
           </div>
         </form>
       </div>
     </div>
   );
 }
-
-const containerStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '2rem' };
-const formCardStyle = { width: '100%', maxWidth: 420, padding: '2rem', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' };
-const fieldStyle = { marginBottom: '1rem' };
-const inputStyle = { width: '100%', padding: '0.6rem 1rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', marginTop: '0.25rem', boxSizing: 'border-box' };
-const btnStyle = { width: '100%', padding: '0.75rem', background: '#667eea', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', cursor: 'pointer', fontWeight: 600 };
