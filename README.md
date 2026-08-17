@@ -26,12 +26,7 @@ The dev server proxies `/api` to the backend so no CORS/Origin issues occur. Lea
 | `VITE_API_URL` | Deployed backend URL (leave empty to use the `/api` proxy) |
 | `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID for "Continue with Google" (optional) |
 
-## Admin Account
 
-| Field | Value |
-| --- | --- |
-| Email | `garbatoyin808@gmail.com` |
-| Role | `ADMIN` |
 
 The password is not stored in this repository. Set/rotate it via the backend before going to production — the previously shared password should be considered compromised.
 
