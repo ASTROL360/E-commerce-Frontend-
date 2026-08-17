@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import orderService from '../../services/orderService';
+import { unwrap } from '../../services/api';
+import './userPages.css';
 
 const statusColors = {
   PENDING: '#f39c12',
@@ -13,40 +15,47 @@ const statusColors = {
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     orderService.getMyOrders().then((res) => {
-      const data = res.data?.data || { content: [] };
+      const data = unwrap(res) || { content: [] };
       setOrders(data.content || []);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch(() => {
+      setError('Failed to load orders');
+    }).finally(() => setLoading(false));
   }, []);
 
   return (
-    <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
+    <div className="orders-page">
       <h1>My Orders</h1>
+      {error && <p className="orders-error">{error}</p>}
       {loading ? (
         <p>Loading orders...</p>
       ) : orders.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+        <div className="orders-empty">
           <p>No orders yet.</p>
-          <Link to="/products" style={linkStyle}>Start Shopping</Link>
+          <Link to="/products" className="orders-link">Start Shopping</Link>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+        <div className="orders-list">
           {orders.map((order) => (
-            <Link key={order.id} to={`/orders/${order.id}`} style={orderCardStyle}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <Link key={order.id} to={`/orders/${order.id}`} className="orders-card">
+              <div className="orders-card-header">
                 <div>
                   <strong>{order.id}</strong>
-                  <span style={{ marginLeft: '1rem', color: '#888' }}>
+                  <span className="orders-card-date">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <span style={badgeStyle(statusColors[order.status] || '#888')}>
+                <span
+                  className="orders-badge"
+                  style={{ '--badge-color': statusColors[order.status] || '#888' }}
+                >
                   {order.status}
                 </span>
               </div>
-              <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+              <div className="orders-card-footer">
                 <span>{order.items?.length || 0} item(s)</span>
                 <strong>₦{Number(order.totalAmount).toFixed(2)}</strong>
               </div>
@@ -57,30 +66,3 @@ export default function Orders() {
     </div>
   );
 }
-
-const orderCardStyle = {
-  display: 'block',
-  padding: '1rem 1.25rem',
-  background: '#fff',
-  border: '1px solid #e0e0e0',
-  borderRadius: '8px',
-  textDecoration: 'none',
-  color: '#333',
-};
-const badgeStyle = (color) => ({
-  padding: '2px 10px',
-  background: color,
-  color: '#fff',
-  borderRadius: '12px',
-  fontSize: '0.8rem',
-  fontWeight: 600,
-});
-const linkStyle = {
-  display: 'inline-block',
-  padding: '0.75rem 2rem',
-  background: '#667eea',
-  color: '#fff',
-  borderRadius: '8px',
-  textDecoration: 'none',
-  marginTop: '0.5rem',
-};
