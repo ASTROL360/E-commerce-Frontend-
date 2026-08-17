@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import paymentService from '../../services/paymentService';
+import { unwrap } from '../../services/api';
 import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
 
@@ -22,7 +23,7 @@ export default function PaymentVerify() {
     setLoading(true);
     setError('');
     paymentService.verify(reference).then((res) => {
-      const data = res.data?.data || res.data;
+      const data = unwrap(res);
       setStatus(data?.status);
       setOrderId(data?.orderId || null);
     }).catch((err) => {
