@@ -5,6 +5,7 @@ import { useCart } from '../../contexts/CartContext';
 import addressService from '../../services/addressService';
 import orderService from '../../services/orderService';
 import paymentService from '../../services/paymentService';
+import { unwrap } from '../../services/api';
 import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
 
@@ -15,6 +16,7 @@ export default function Checkout() {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -23,12 +25,14 @@ export default function Checkout() {
       return;
     }
     addressService.getAll().then((res) => {
-      const saved = res.data?.data || [];
+      const saved = unwrap(res) || [];
       setAddresses(saved);
       const defaultAddr = saved.find((a) => a.isDefault);
       if (defaultAddr) setSelectedAddressId(defaultAddr.id);
       else if (saved.length > 0) setSelectedAddressId(saved[0].id);
-    }).catch(() => {});
+    }).catch(() => {
+      setError('Failed to load addresses');
+    }).finally(() => setInitialLoading(false));
   }, [user, navigate]);
 
   const shipping = subtotal >= 50000 ? 0 : 2500;
@@ -51,10 +55,10 @@ export default function Checkout() {
     setError('');
     try {
       const res = await orderService.checkoutFromCart(selectedAddressId);
-      const order = res.data?.data || res.data;
+      const order = unwrap(res);
 
       const payRes = await paymentService.initialize(order.id, `${window.location.origin}/payment/verify`);
-      const payment = payRes.data?.data || payRes.data;
+      const payment = unwrap(payRes);
 
       clearCart();
       if (payment.authorizationUrl) {
@@ -71,27 +75,28 @@ export default function Checkout() {
     }
   };
 
+  if (initialLoading) return <Loading />;
   if (loading) return <Loading />;
 
   return (
-    <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
+    <div className="checkout-page">
       <h1>Checkout</h1>
       {error && <ErrorMessage message={error} />}
 
-      <section style={sectionStyle}>
+      <section className="checkout-section">
         <h2>1. Shipping Address</h2>
         {addresses.length === 0 ? (
           <div>
             <p>No saved addresses. Please add one first.</p>
-            <Link to="/addresses?returnUrl=/checkout" style={linkStyle}>Add Address</Link>
+            <Link to="/addresses?returnUrl=/checkout" className="checkout-link">Add Address</Link>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="checkout-addr-list">
             {addresses.map((addr) => (
               <label
                 key={addr.id}
+                className="checkout-addr-card"
                 style={{
-                  ...addrCardStyle,
                   borderColor: selectedAddressId === addr.id ? '#667eea' : '#ddd',
                 }}
               >
@@ -110,7 +115,7 @@ export default function Checkout() {
                   {addr.city}, {addr.state} {addr.postalCode}
                   <br />
                   {addr.country}
-                  {addr.isDefault && <span style={defaultBadge}>Default</span>}
+                  {addr.isDefault && <span className="checkout-default-badge">Default</span>}
                 </div>
               </label>
             ))}
@@ -118,39 +123,33 @@ export default function Checkout() {
         )}
       </section>
 
-      <section style={sectionStyle}>
+      <section className="checkout-section">
         <h2>2. Order Summary</h2>
         {cart.map((item) => (
-          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
+          <div key={item.id} className="checkout-order-item">
             <span>{item.productName} x {item.quantity}</span>
             <span>₦{(Number(item.unitPrice) * item.quantity).toFixed(2)}</span>
           </div>
         ))}
-        <div style={{ marginTop: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className="checkout-order-totals">
+          <div className="checkout-order-row">
             <span>Subtotal</span><span>₦{subtotal.toFixed(2)}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div className="checkout-order-row">
             <span>Shipping</span><span>{shipping === 0 ? 'Free' : `₦${shipping.toFixed(2)}`}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.1rem', marginTop: '0.5rem' }}>
+          <div className="checkout-order-total">
             <span>Total</span><span>₦{total.toFixed(2)}</span>
           </div>
         </div>
       </section>
 
-      <section style={sectionStyle}>
+      <section className="checkout-section">
         <h2>3. Payment</h2>
-        <button onClick={handlePlaceOrder} style={payBtn} disabled={loading}>
+        <button onClick={handlePlaceOrder} className="checkout-pay-btn" disabled={loading}>
           {addresses.length === 0 ? 'Add a shipping address first' : 'Pay with Paystack'}
         </button>
       </section>
     </div>
   );
 }
-
-const sectionStyle = { marginBottom: '2rem', padding: '1.5rem', background: '#f8f9fa', borderRadius: '8px' };
-const addrCardStyle = { display: 'flex', gap: '0.75rem', padding: '1rem', border: '2px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: '#fff' };
-const defaultBadge = { marginLeft: '0.5rem', background: '#667eea', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem' };
-const linkStyle = { color: '#667eea', textDecoration: 'underline' };
-const payBtn = { padding: '0.75rem 2rem', background: '#00b894', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', cursor: 'pointer', fontWeight: 600, width: '100%' };
