@@ -1,13 +1,18 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useAuth } from '../../contexts/AuthContext';
 import ErrorMessage from '../../components/common/ErrorMessage';
-import PasswordInput from '../../components/common/PasswordInput';
 import { GOOGLE_AUTH_URL } from '../../services/authService';
 
+const schema = z.object({
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email'),
+  password: z.string().min(1, 'Password is required'),
+});
+
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -15,12 +20,15 @@ export default function Login() {
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || '/';
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = async (data) => {
     setError('');
     setLoading(true);
     try {
-      const profile = await login(email, password);
+      const profile = await login(data.email, data.password);
       navigate(profile?.role === 'ADMIN' ? '/admin' : returnUrl);
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Login failed');
@@ -30,49 +38,54 @@ export default function Login() {
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={formCardStyle}>
+    <div className="auth-page">
+      <div className="auth-card">
         <h1>Welcome Back</h1>
         {error && <ErrorMessage message={error} />}
 
-        <form onSubmit={handleSubmit}>
-          <div style={fieldStyle}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="auth-field">
             <label>Email</label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={inputStyle}
+              {...register('email')}
+              className="auth-input"
             />
+            {errors.email && <p className="auth-error">{errors.email.message}</p>}
           </div>
-          <PasswordInput
-            label="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button type="submit" disabled={loading} style={btnStyle}>
+          <div className="auth-field">
+            <label>Password</label>
+            <input
+              type="password"
+              {...register('password')}
+              className="auth-input"
+            />
+            {errors.password && <p className="auth-error">{errors.password.message}</p>}
+          </div>
+          <button type="submit" disabled={loading} className="auth-btn">
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
-        <div style={dividerStyle}>
-          <hr style={hrStyle} />
-          <span style={dividerTextStyle}>or</span>
-          <hr style={hrStyle} />
+        <div className="auth-divider">
+          <hr className="auth-hr" />
+          <span className="auth-divider-text">or</span>
+          <hr className="auth-hr" />
         </div>
 
-        <a href={GOOGLE_AUTH_URL} style={googleBtnStyle}>
+        <a href={GOOGLE_AUTH_URL} className="auth-google-btn">
           <GoogleIcon />
           <span>Continue with Google</span>
         </a>
 
-        <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.9rem' }}>
+        <div className="auth-link">
           <Link to="/forgot-password">Forgot Password?</Link>
         </div>
-        <div style={{ marginTop: '0.5rem', textAlign: 'center', fontSize: '0.9rem' }}>
-          Don't have an account? <Link to={`/register?returnUrl=${encodeURIComponent(returnUrl)}`} style={{ fontWeight: 600 }}>Register</Link>
+        <div className="auth-link">
+          Don't have an account?{' '}
+          <Link to={`/register?returnUrl=${encodeURIComponent(returnUrl)}`} className="auth-link-bold">
+            Register
+          </Link>
         </div>
       </div>
     </div>
@@ -89,13 +102,3 @@ function GoogleIcon() {
     </svg>
   );
 }
-
-const containerStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '2rem' };
-const formCardStyle = { width: '100%', maxWidth: 420, padding: '2rem', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' };
-const fieldStyle = { marginBottom: '1rem' };
-const inputStyle = { width: '100%', padding: '0.6rem 1rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', marginTop: '0.25rem', boxSizing: 'border-box' };
-const btnStyle = { width: '100%', padding: '0.75rem', background: '#667eea', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', cursor: 'pointer', fontWeight: 600 };
-const googleBtnStyle = { width: '100%', padding: '0.65rem 1rem', background: '#fff', color: '#444', border: '1px solid #dadce0', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer', fontWeight: 500, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.65rem', textDecoration: 'none', transition: 'background 0.2s, box-shadow 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.04)', boxSizing: 'border-box' };
-const dividerStyle = { display: 'flex', alignItems: 'center', margin: '1.25rem 0' };
-const hrStyle = { flex: 1, border: 'none', borderTop: '1px solid #e0e0e0' };
-const dividerTextStyle = { padding: '0 0.85rem', color: '#999', fontSize: '0.85rem' };
