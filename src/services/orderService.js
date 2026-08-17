@@ -1,7 +1,6 @@
 import api from './api'
 
 const orderService = {
-  create: (data) => api.post('/orders', data),
   checkoutFromCart: (addressId) => api.post('/orders/checkout', { addressId }),
   getById: (id) => api.get(`/orders/${id}`),
   getMyOrders: (params = {}) => api.get('/orders', { params }),
