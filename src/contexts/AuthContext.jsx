@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 import authService from '../services/authService';
+import { unwrap } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -20,7 +21,7 @@ export function AuthProvider({ children }) {
   const loadProfile = async (fallback) => {
     try {
       const res = await authService.getProfile();
-      return res.data?.data || res.data;
+      return unwrap(res);
     } catch {
       return fallback;
     }
@@ -28,7 +29,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const res = await authService.login(email, password);
-    const authData = res.data?.data || res.data;
+    const authData = unwrap(res);
     localStorage.setItem('token', authData.token);
     setToken(authData.token);
     const profile = await loadProfile({ email: authData.email, role: authData.role });
@@ -39,7 +40,7 @@ export function AuthProvider({ children }) {
 
   const register = async (name, email, password) => {
     const res = await authService.register(name, email, password);
-    const authData = res.data?.data || res.data;
+    const authData = unwrap(res);
     localStorage.setItem('token', authData.token);
     setToken(authData.token);
     const profile = await loadProfile({ name, email: authData.email, role: authData.role });
