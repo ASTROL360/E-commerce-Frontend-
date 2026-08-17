@@ -1,116 +1,148 @@
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import categoryService from '../../services/categoryService';
+import { unwrap } from '../../services/api';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import './admin.css';
+
+const schema = z.object({
+  name: z.string().min(1, 'Category name is required'),
+  description: z.string().optional(),
+});
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', description: '' });
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: { name: '', description: '' },
+  });
 
   const loadCategories = () => {
     setLoading(true);
     categoryService.getAll().then((res) => {
-      setCategories(res.data?.data || []);
-    }).catch(() => {}).finally(() => setLoading(false));
+      setCategories(unwrap(res) || []);
+    }).catch(() => {
+      setError('Failed to load categories');
+    }).finally(() => setLoading(false));
   };
 
   useEffect(() => { loadCategories(); }, []);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
   const startCreate = () => {
     setEditing(null);
-    setForm({ name: '', description: '' });
+    reset({ name: '', description: '' });
     setShowForm(!showForm);
   };
 
   const startEdit = (c) => {
     setEditing(c);
-    setForm({ name: c.name, description: c.description || '' });
+    reset({ name: c.name, description: c.description || '' });
     setShowForm(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.name) return;
+  const onSubmit = async (data) => {
     try {
       if (editing) {
-        await categoryService.update(editing.id, form);
+        await categoryService.update(editing.id, data);
       } else {
-        await categoryService.create(form);
+        await categoryService.create(data);
       }
-      setForm({ name: '', description: '' });
+      reset({ name: '', description: '' });
       setShowForm(false);
       setEditing(null);
       loadCategories();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to save category');
+      setError(err.response?.data?.message || 'Failed to save category');
     }
   };
 
-  const handleDelete = async (c) => {
-    if (!window.confirm(`Delete category "${c.name}"?`)) return;
+  const handleDelete = (c) => {
+    setDeleteTarget(c);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await categoryService.remove(c.id);
+      await categoryService.remove(deleteTarget.id);
       loadCategories();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete category');
+      setError(err.response?.data?.message || 'Failed to delete category');
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="admin-categories-page">
+      <div className="admin-categories-header">
         <h1>Categories</h1>
-        <button onClick={startCreate} style={addBtn}>
+        <button onClick={startCreate} className="admin-categories-add-btn">
           {showForm ? 'Cancel' : 'Add Category'}
         </button>
       </div>
 
+      {error && <p className="admin-categories-error">{error}</p>}
+
       {showForm && (
-        <form onSubmit={handleSubmit} style={formStyle}>
+        <form onSubmit={handleSubmit(onSubmit)} className="admin-categories-form">
           <h3>{editing ? `Edit Category: ${editing.name}` : 'New Category'}</h3>
-          <div style={fieldStyle}>
+          <div className="admin-categories-field">
             <label>Name</label>
-            <input name="name" value={form.name} onChange={handleChange} required style={inputStyle} />
+            <input className="admin-categories-input" {...register('name')} />
+            {errors.name && <p className="admin-categories-field-error">{errors.name.message}</p>}
           </div>
-          <div style={fieldStyle}>
+          <div className="admin-categories-field">
             <label>Description</label>
-            <input name="description" value={form.description} onChange={handleChange} style={inputStyle} />
+            <input className="admin-categories-input" {...register('description')} />
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button type="submit" style={saveBtn}>{editing ? 'Update Category' : 'Create Category'}</button>
+          <div className="admin-categories-actions">
+            <button type="submit" className="admin-categories-save-btn">{editing ? 'Update Category' : 'Create Category'}</button>
             {editing && (
-              <button type="button" onClick={startCreate} style={cancelBtn}>Cancel</button>
+              <button type="button" onClick={startCreate} className="admin-categories-cancel-btn">Cancel</button>
             )}
           </div>
         </form>
       )}
 
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Category"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"?`}
+        confirmText="Delete"
+        danger
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
       {loading ? (
         <p>Loading categories...</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+        <table className="admin-categories-table">
           <thead>
-            <tr style={{ borderBottom: '2px solid #ddd', textAlign: 'left' }}>
-              <th style={thStyle}>ID</th>
-              <th style={thStyle}>Name</th>
-              <th style={thStyle}>Description</th>
-              <th style={thStyle}>Actions</th>
+            <tr className="admin-categories-thead-row">
+              <th className="admin-categories-th">ID</th>
+              <th className="admin-categories-th">Name</th>
+              <th className="admin-categories-th">Description</th>
+              <th className="admin-categories-th">Actions</th>
             </tr>
           </thead>
           <tbody>
             {categories.map((c) => (
-              <tr key={c.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={tdStyle}>{c.id}</td>
-                <td style={tdStyle}>{c.name}</td>
-                <td style={tdStyle}>{c.description || '-'}</td>
-                <td style={tdStyle}>
-                  <button onClick={() => startEdit(c)} style={editBtn}>Edit</button>{' '}
-                  <button onClick={() => handleDelete(c)} style={deleteBtn}>Delete</button>
+              <tr key={c.id} className="admin-categories-tbody-row">
+                <td className="admin-categories-td">{c.id}</td>
+                <td className="admin-categories-td">{c.name}</td>
+                <td className="admin-categories-td">{c.description || '-'}</td>
+                <td className="admin-categories-td">
+                  <button onClick={() => startEdit(c)} className="admin-categories-edit-btn">Edit</button>{' '}
+                  <button onClick={() => handleDelete(c)} className="admin-categories-delete-btn">Delete</button>
                 </td>
               </tr>
             ))}
@@ -120,14 +152,3 @@ export default function AdminCategories() {
     </div>
   );
 }
-
-const addBtn = { padding: '0.5rem 1rem', background: '#667eea', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 };
-const formStyle = { padding: '1.5rem', background: '#f8f9fa', borderRadius: '8px', marginTop: '1rem' };
-const fieldStyle = { marginBottom: '1rem' };
-const inputStyle = { width: '100%', padding: '0.6rem 1rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', marginTop: '0.25rem', boxSizing: 'border-box' };
-const saveBtn = { padding: '0.6rem 1.5rem', background: '#00b894', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 };
-const cancelBtn = { padding: '0.6rem 1.5rem', background: '#ccc', color: '#333', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 };
-const thStyle = { padding: '0.75rem 0.5rem' };
-const tdStyle = { padding: '0.75rem 0.5rem' };
-const editBtn = { padding: '0.3rem 0.75rem', background: '#3498db', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' };
-const deleteBtn = { padding: '0.3rem 0.75rem', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' };
