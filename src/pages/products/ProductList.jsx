@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import productService from '../../services/productService';
 import categoryService from '../../services/categoryService';
+import { unwrap } from '../../services/api';
 import ProductCard from '../../components/products/ProductCard';
 import Pagination from '../../components/common/Pagination';
 
@@ -24,8 +25,10 @@ export default function ProductList() {
 
   useEffect(() => {
     categoryService.getAll().then((res) => {
-      setCategories(res.data?.data || []);
-    }).catch(() => {});
+      setCategories(unwrap(res) || []);
+    }).catch(() => {
+      setCategories([]);
+    });
   }, []);
 
   useEffect(() => {
@@ -41,7 +44,7 @@ export default function ProductList() {
     if (selectedCategory) params.categoryId = selectedCategory;
 
     productService.getAll(params).then((res) => {
-      const data = res.data?.data || { content: [], totalElements: 0 };
+      const data = unwrap(res) || { content: [], totalElements: 0 };
       setProducts(data.content || []);
       setTotalElements(data.totalElements || 0);
     }).catch((err) => {
@@ -64,11 +67,11 @@ export default function ProductList() {
   };
 
   return (
-    <div style={{ display: 'flex', gap: '2rem', maxWidth: 1200, margin: '0 auto', padding: '2rem 1rem' }}>
-      <aside style={{ minWidth: 220 }}>
+    <div className="product-list-layout">
+      <aside className="product-list-aside">
         <h3>Categories</h3>
         {categories.map((c) => (
-          <label key={c.id} style={{ display: 'block', padding: '0.35rem 0', cursor: 'pointer' }}>
+          <label key={c.id} className="product-list-cat-label">
             <input
               type="checkbox"
               checked={String(selectedCategory) === String(c.id)}
@@ -79,23 +82,23 @@ export default function ProductList() {
         ))}
       </aside>
 
-      <main style={{ flex: 1 }}>
-        <div style={{ marginBottom: '1rem' }}>
+      <main className="product-list-main">
+        <div className="product-list-toolbar">
           <input
             type="text"
             placeholder="Search products..."
             value={searchTerm}
             onChange={handleSearch}
-            style={inputStyle}
+            className="product-list-search"
           />
-          <p style={{ color: '#666', marginTop: '0.5rem' }}>{totalElements} product(s) found</p>
+          <p className="product-list-count">{totalElements} product(s) found</p>
         </div>
 
-        <div style={gridStyle}>
+        <div className="product-list-grid">
           {loading ? (
             <p>Loading products...</p>
           ) : error ? (
-            <p style={{ color: 'red' }}>{error}</p>
+            <p className="product-list-error">{error}</p>
           ) : products.length > 0 ? (
             products.map((p) => <ProductCard key={p.id} product={p} />)
           ) : (
@@ -110,16 +113,3 @@ export default function ProductList() {
     </div>
   );
 }
-
-const gridStyle = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-  gap: '1.5rem',
-};
-const inputStyle = {
-  width: '100%',
-  padding: '0.6rem 1rem',
-  border: '1px solid #ccc',
-  borderRadius: '6px',
-  fontSize: '1rem',
-};
