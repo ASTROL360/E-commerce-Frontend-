@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import cartService from '../services/cartService';
+import { unwrap } from '../services/api';
 
 const CartContext = createContext(null);
 
@@ -8,12 +9,15 @@ export function CartProvider({ children }) {
   const { isAuthenticated } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const pendingRef = useRef(false);
 
   const loadCart = useCallback(async () => {
+    if (pendingRef.current) return;
+    pendingRef.current = true;
     setLoading(true);
     try {
       const res = await cartService.get();
-      const data = res.data?.data || res.data;
+      const data = unwrap(res);
       setItems(data?.items || []);
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
@@ -21,6 +25,7 @@ export function CartProvider({ children }) {
       }
     } finally {
       setLoading(false);
+      pendingRef.current = false;
     }
   }, []);
 
@@ -33,28 +38,44 @@ export function CartProvider({ children }) {
   }, [isAuthenticated, loadCart]);
 
   const addItem = useCallback(async (productId, quantity = 1) => {
-    await cartService.addItem(productId, quantity);
-    await loadCart();
+    try {
+      await cartService.addItem(productId, quantity);
+      await loadCart();
+    } catch (e) {
+      throw new Error(e.response?.data?.message || 'Failed to add item to cart');
+    }
   }, [loadCart]);
 
   const updateQuantity = useCallback(async (itemId, quantity) => {
-    if (quantity <= 0) {
-      await cartService.removeItem(itemId);
-      setItems((prev) => prev.filter((item) => item.id !== itemId));
-      return;
+    try {
+      if (quantity <= 0) {
+        await cartService.removeItem(itemId);
+        setItems((prev) => prev.filter((item) => item.id !== itemId));
+        return;
+      }
+      await cartService.updateItem(itemId, quantity);
+      await loadCart();
+    } catch (e) {
+      throw new Error(e.response?.data?.message || 'Failed to update quantity');
     }
-    await cartService.updateItem(itemId, quantity);
-    await loadCart();
   }, [loadCart]);
 
   const removeItem = useCallback(async (itemId) => {
-    await cartService.removeItem(itemId);
-    setItems((prev) => prev.filter((item) => item.id !== itemId));
+    try {
+      await cartService.removeItem(itemId);
+      setItems((prev) => prev.filter((item) => item.id !== itemId));
+    } catch (e) {
+      throw new Error(e.response?.data?.message || 'Failed to remove item');
+    }
   }, []);
 
   const clearCart = useCallback(async () => {
-    await cartService.clear();
-    setItems([]);
+    try {
+      await cartService.clear();
+      setItems([]);
+    } catch (e) {
+      throw new Error(e.response?.data?.message || 'Failed to clear cart');
+    }
   }, []);
 
   const subtotal = items.reduce(
@@ -62,7 +83,6 @@ export function CartProvider({ children }) {
     0
   );
 
-  const getTotal = useCallback(() => subtotal, [subtotal]);
   const getItemCount = useCallback(
     () => items.reduce((sum, item) => sum + item.quantity, 0),
     [items]
@@ -76,10 +96,8 @@ export function CartProvider({ children }) {
     removeItem,
     updateQuantity,
     clearCart,
-    getTotal,
     subtotal,
     getItemCount,
-    refresh: loadCart,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
