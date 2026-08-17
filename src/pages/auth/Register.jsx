@@ -1,41 +1,40 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useAuth } from '../../contexts/AuthContext';
 import { GOOGLE_AUTH_URL } from '../../services/authService';
 import ErrorMessage from '../../components/common/ErrorMessage';
-import PasswordInput from '../../components/common/PasswordInput';
+
+const schema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+});
 
 export default function Register() {
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register: registerUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || location.state?.from || '/';
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(schema),
+  });
 
-  const handleSubmit = async (e) => {
-    
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setError('');
-
-    if (form.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-    if (form.password !== form.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
     setLoading(true);
     try {
-      await register(form.name, form.email, form.password);
+      await registerUser(data.name, data.email, data.password);
       navigate(returnUrl);
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Registration failed');
@@ -49,52 +48,53 @@ export default function Register() {
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={formCardStyle}>
+    <div className="auth-page">
+      <div className="auth-card">
         <h1>Create Account</h1>
         {error && <ErrorMessage message={error} />}
 
-        <form onSubmit={handleSubmit}>
-          <div style={fieldStyle}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="auth-field">
             <label>Name</label>
-            <input name="name" value={form.name} onChange={handleChange} required style={inputStyle} />
+            <input {...register('name')} className="auth-input" />
+            {errors.name && <p className="auth-error">{errors.name.message}</p>}
           </div>
-          <div style={fieldStyle}>
+          <div className="auth-field">
             <label>Email</label>
-            <input name="email" type="email" value={form.email} onChange={handleChange} required style={inputStyle} />
+            <input type="email" {...register('email')} className="auth-input" />
+            {errors.email && <p className="auth-error">{errors.email.message}</p>}
           </div>
-          <PasswordInput
-            label="Password"
-            value={form.password}
-            onChange={(e) => handleChange(e)}
-            name="password"
-            required
-          />
-          <PasswordInput
-            label="Confirm Password"
-            value={form.confirmPassword}
-            onChange={(e) => handleChange(e)}
-            name="confirmPassword"
-            required
-          />
-          <button type="submit" disabled={loading} style={btnStyle}>
+          <div className="auth-field">
+            <label>Password</label>
+            <input type="password" {...register('password')} className="auth-input" />
+            {errors.password && <p className="auth-error">{errors.password.message}</p>}
+          </div>
+          <div className="auth-field">
+            <label>Confirm Password</label>
+            <input type="password" {...register('confirmPassword')} className="auth-input" />
+            {errors.confirmPassword && <p className="auth-error">{errors.confirmPassword.message}</p>}
+          </div>
+          <button type="submit" disabled={loading} className="auth-btn">
             {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
 
-        <div style={dividerStyle}>
-          <hr style={hrStyle} />
-          <span style={dividerTextStyle}>or</span>
-          <hr style={hrStyle} />
+        <div className="auth-divider">
+          <hr className="auth-hr" />
+          <span className="auth-divider-text">or</span>
+          <hr className="auth-hr" />
         </div>
 
-        <button type="button" onClick={handleGoogleRegister} style={googleBtnStyle}>
+        <button type="button" onClick={handleGoogleRegister} className="auth-google-btn">
           <GoogleIcon />
           <span>Sign up with Google</span>
         </button>
 
-        <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.9rem' }}>
-          Already have an account? <Link to={`/login?returnUrl=${encodeURIComponent(returnUrl)}`} style={{ fontWeight: 600 }}>Login</Link>
+        <div className="auth-link">
+          Already have an account?{' '}
+          <Link to={`/login?returnUrl=${encodeURIComponent(returnUrl)}`} className="auth-link-bold">
+            Login
+          </Link>
         </div>
       </div>
     </div>
@@ -111,13 +111,3 @@ function GoogleIcon() {
     </svg>
   );
 }
-
-const containerStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '2rem' };
-const formCardStyle = { width: '100%', maxWidth: 420, padding: '2rem', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' };
-const fieldStyle = { marginBottom: '1rem' };
-const inputStyle = { width: '100%', padding: '0.6rem 1rem', border: '1px solid #ccc', borderRadius: '6px', fontSize: '1rem', marginTop: '0.25rem', boxSizing: 'border-box' };
-const btnStyle = { width: '100%', padding: '0.75rem', background: '#667eea', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', cursor: 'pointer', fontWeight: 600 };
-const googleBtnStyle = { width: '100%', padding: '0.65rem 1rem', background: '#fff', color: '#444', border: '1px solid #dadce0', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer', fontWeight: 500, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.65rem', transition: 'background 0.2s, box-shadow 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' };
-const dividerStyle = { display: 'flex', alignItems: 'center', margin: '1.25rem 0' };
-const hrStyle = { flex: 1, border: 'none', borderTop: '1px solid #e0e0e0' };
-const dividerTextStyle = { padding: '0 0.85rem', color: '#999', fontSize: '0.85rem' };
