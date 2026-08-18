@@ -42,25 +42,29 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
   };
 
   return (
-    <div className="pagination">
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 py-6">
       <button
-        className="pagination-btn"
+        className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
       >
         &laquo; Prev
       </button>
 
-      <div className="pagination-pages">
+      <div className="flex items-center gap-1">
         {getPageNumbers().map((page, index) =>
           page === '...' ? (
-            <span key={`ellipsis-${index}`} className="pagination-ellipsis">
+            <span key={`ellipsis-${index}`} className="px-2 py-2 text-sm text-gray-400">
               ...
             </span>
           ) : (
             <button
               key={page}
-              className={`pagination-page ${page === currentPage ? 'active' : ''}`}
+              className={`w-9 h-9 text-sm font-medium rounded-lg transition-colors ${
+                page === currentPage
+                  ? 'bg-primary text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
               onClick={() => onPageChange(page)}
             >
               {page}
@@ -70,14 +74,14 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
       </div>
 
       <button
-        className="pagination-btn"
+        className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
       >
         Next &raquo;
       </button>
 
-      <span className="pagination-info">
+      <span className="text-sm text-gray-500 ml-2">
         Page {currentPage} of {totalPages}
       </span>
     </div>
