@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import productService from '../../services/productService';
 import { unwrap } from '../../services/api';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
-import './admin.css';
 
 export default function AdminProducts() {
   const [search, setSearch] = useState('');
@@ -40,10 +39,10 @@ export default function AdminProducts() {
   };
 
   return (
-    <div className="admin-products-page">
-      <div className="admin-products-header">
-        <h1>Products</h1>
-        <Link to="/admin/products/new" className="admin-products-add-btn">Add Product</Link>
+    <div className="p-6 lg:p-8">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+        <Link to="/admin/products/new" className="bg-success text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 text-sm">Add Product</Link>
       </div>
 
       <input
@@ -51,10 +50,10 @@ export default function AdminProducts() {
         placeholder="Search products..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="admin-products-search"
+        className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg text-sm mb-4 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
       />
 
-      {error && <p className="admin-products-error">{error}</p>}
+      {error && <p className="text-danger mb-4">{error}</p>}
 
       <ConfirmDialog
         open={deleteTarget !== null}
@@ -67,35 +66,39 @@ export default function AdminProducts() {
       />
 
       {loading ? (
-        <p>Loading products...</p>
+        <p className="text-gray-500">Loading products...</p>
       ) : (
-        <table className="admin-products-table">
-          <thead>
-            <tr className="admin-products-thead-row">
-              <th className="admin-products-th">ID</th>
-              <th className="admin-products-th">Name</th>
-              <th className="admin-products-th">Category</th>
-              <th className="admin-products-th">Price</th>
-              <th className="admin-products-th">Stock</th>
-              <th className="admin-products-th">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr key={p.id} className="admin-products-tbody-row">
-                <td className="admin-products-td">{p.id}</td>
-                <td className="admin-products-td">{p.name}</td>
-                <td className="admin-products-td">{p.categoryName || '-'}</td>
-                <td className="admin-products-td">₦{Number(p.price).toFixed(2)}</td>
-                <td className="admin-products-td">{p.stockQuantity}</td>
-                <td className="admin-products-td">
-                  <Link to={`/admin/products/${p.id}/edit`} className="admin-products-edit-btn">Edit</Link>{' '}
-                  <button onClick={() => handleDelete(p.id)} className="admin-products-delete-btn">Delete</button>
-                </td>
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">ID</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">Name</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">Category</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">Price</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">Stock</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filtered.map((p) => (
+                <tr key={p.id} className="hover:bg-gray-50">
+                  <td className="py-3 px-4 text-sm text-gray-900">{p.id}</td>
+                  <td className="py-3 px-4 text-sm text-gray-900">{p.name}</td>
+                  <td className="py-3 px-4 text-sm text-gray-700">{p.categoryName || '-'}</td>
+                  <td className="py-3 px-4 text-sm text-gray-900 font-medium">₦{Number(p.price).toFixed(2)}</td>
+                  <td className="py-3 px-4 text-sm text-gray-700">{p.stockQuantity}</td>
+                  <td className="py-3 px-4">
+                    <div className="flex gap-2">
+                      <Link to={`/admin/products/${p.id}/edit`} className="bg-primary text-white px-3 py-1 rounded text-sm">Edit</Link>
+                      <button onClick={() => handleDelete(p.id)} className="bg-danger text-white px-3 py-1 rounded text-sm">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
