@@ -33,7 +33,13 @@ export default function Wishlist() {
       <h1 className="text-2xl font-bold text-gray-900 mb-8">My Wishlist ({items.length})</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.map((item) => (
-          <ProductCard key={item.productId || item.id} product={item.product || item} />
+          <ProductCard key={item.id} product={{
+            id: item.productId,
+            name: item.productName,
+            price: item.productPrice,
+            imageUrl: item.productImageUrl,
+            stockQuantity: item.stockQuantity,
+          }} />
         ))}
       </div>
     </div>
