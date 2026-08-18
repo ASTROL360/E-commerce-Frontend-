@@ -39,8 +39,8 @@ export default function AdminProducts() {
   };
 
   return (
-    <div className="p-6 lg:p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 lg:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Products</h1>
         <Link to="/admin/products/new" className="bg-success text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 text-sm">Add Product</Link>
       </div>
@@ -68,7 +68,7 @@ export default function AdminProducts() {
       {loading ? (
         <p className="text-gray-500">Loading products...</p>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto bg-white rounded-xl border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
