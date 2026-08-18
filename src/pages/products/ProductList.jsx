@@ -67,49 +67,74 @@ export default function ProductList() {
   };
 
   return (
-    <div className="product-list-layout">
-      <aside className="product-list-aside">
-        <h3>Categories</h3>
-        {categories.map((c) => (
-          <label key={c.id} className="product-list-cat-label">
-            <input
-              type="checkbox"
-              checked={String(selectedCategory) === String(c.id)}
-              onChange={() => handleCategoryChange(c.id)}
-            />{' '}
-            {c.name}
-          </label>
-        ))}
-      </aside>
-
-      <main className="product-list-main">
-        <div className="product-list-toolbar">
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="product-list-search"
-          />
-          <p className="product-list-count">{totalElements} product(s) found</p>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex gap-2 overflow-x-auto pb-2 flex-1">
+          <button
+            onClick={() => { setSelectedCategory(''); setCurrentPage(1); }}
+            className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              !selectedCategory
+                ? 'bg-primary text-white'
+                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            All
+          </button>
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => handleCategoryChange(c.id)}
+              className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                String(selectedCategory) === String(c.id)
+                  ? 'bg-primary text-white'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              {c.name}
+            </button>
+          ))}
         </div>
 
-        <div className="product-list-grid">
-          {loading ? (
-            <p>Loading products...</p>
-          ) : error ? (
-            <p className="product-list-error">{error}</p>
-          ) : products.length > 0 ? (
-            products.map((p) => <ProductCard key={p.id} product={p} />)
-          ) : (
-            <p>No products match your criteria.</p>
-          )}
-        </div>
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchTerm}
+          onChange={handleSearch}
+          className="w-full sm:w-64 px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+        />
+      </div>
 
-        {totalPages > 1 && (
+      <p className="text-sm text-gray-500 mb-6">{totalElements} product(s) found</p>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <p className="text-gray-500 text-lg">Loading products...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center py-20">
+          <p className="text-danger font-medium">{error}</p>
+        </div>
+      ) : products.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20">
+          <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <h3 className="text-lg font-semibold text-gray-700 mb-1">No products found</h3>
+          <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-10">
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-        )}
-      </main>
+        </div>
+      )}
     </div>
   );
 }
