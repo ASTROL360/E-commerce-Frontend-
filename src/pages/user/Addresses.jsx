@@ -22,6 +22,7 @@ const addressSchema = z.object({
 
 export default function Addresses() {
   const [addresses, setAddresses] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -141,6 +142,14 @@ export default function Addresses() {
       </div>
 
       {error && <p className="text-danger mb-4">{error}</p>}
+
+      {loading && !showForm && (
+        <p className="text-gray-500 text-center py-8">Loading addresses...</p>
+      )}
+
+      {!loading && addresses.length === 0 && !showForm && (
+        <p className="text-gray-500 text-center py-8">No addresses saved yet.</p>
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
