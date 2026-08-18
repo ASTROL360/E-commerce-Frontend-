@@ -8,7 +8,6 @@ import categoryService from '../../services/categoryService';
 import { unwrap } from '../../services/api';
 import Loading from '../../components/common/Loading';
 import { uploadToCloudinary } from '../../services/cloudinaryService';
-import './admin.css';
 
 const schema = z.object({
   name: z.string().min(1, 'Product name is required'),
@@ -111,61 +110,61 @@ export default function AdminProductForm() {
   if (loading) return <Loading />;
 
   return (
-    <div className="admin-product-form-page">
-      <Link to="/admin/products" className="admin-product-form-back">&larr; Back to Products</Link>
-      <h1>{isEditing ? 'Edit Product' : 'Add Product'}</h1>
+    <div className="max-w-2xl mx-auto p-6 lg:p-8">
+      <Link to="/admin/products" className="text-primary hover:underline text-sm inline-block mb-4">&larr; Back to Products</Link>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">{isEditing ? 'Edit Product' : 'Add Product'}</h1>
 
-      {error && <p className="admin-product-form-error">{error}</p>}
+      {error && <p className="text-danger mb-4">{error}</p>}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="admin-product-form-card">
-        <div className="admin-product-form-field">
-          <label>Product Name</label>
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
           <input
             type="text"
-            className="admin-product-form-input"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
             {...register('name')}
           />
-          {errors.name && <p className="admin-product-form-field-error">{errors.name.message}</p>}
+          {errors.name && <p className="text-danger text-xs mt-1">{errors.name.message}</p>}
         </div>
 
-        <div className="admin-product-form-field">
-          <label>Price</label>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
           <input
             type="number"
             step="0.01"
-            className="admin-product-form-input"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
             {...register('price')}
           />
-          {errors.price && <p className="admin-product-form-field-error">{errors.price.message}</p>}
+          {errors.price && <p className="text-danger text-xs mt-1">{errors.price.message}</p>}
         </div>
 
-        <div className="admin-product-form-field">
-          <label>Stock Quantity</label>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
           <input
             type="number"
-            className="admin-product-form-input"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
             {...register('stockQuantity')}
           />
-          {errors.stockQuantity && <p className="admin-product-form-field-error">{errors.stockQuantity.message}</p>}
+          {errors.stockQuantity && <p className="text-danger text-xs mt-1">{errors.stockQuantity.message}</p>}
         </div>
 
-        <div className="admin-product-form-field">
-          <label>Product Image</label>
-          <input type="file" accept="image/*" onChange={handleImageChange} className="admin-product-form-file" disabled={uploading} />
-          {uploading && <p className="admin-product-form-hint">Uploading...</p>}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+          <input type="file" accept="image/*" onChange={handleImageChange} disabled={uploading} className="w-full text-sm text-gray-700 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:opacity-90" />
+          {uploading && <p className="text-gray-500 text-xs mt-1">Uploading...</p>}
           {imageUrl ? (
-            <div className="admin-product-form-preview-row">
-              <img src={imageUrl} alt="Product" className="admin-product-form-main-preview" />
-              <button type="button" onClick={() => setImageUrl('')} className="admin-product-form-remove-img">Remove</button>
+            <div className="flex items-center gap-4 mt-3">
+              <img src={imageUrl} alt="Product" className="w-32 h-32 object-cover rounded-xl border border-gray-200" />
+              <button type="button" onClick={() => setImageUrl('')} className="text-danger text-sm hover:underline">Remove</button>
             </div>
           ) : (
-            <p className="admin-product-form-hint">Choose a JPG or PNG file to upload.</p>
+            <p className="text-gray-400 text-xs mt-1">Choose a JPG or PNG file to upload.</p>
           )}
         </div>
 
-        <div className="admin-product-form-field">
-          <label>Category</label>
-          <select className="admin-product-form-input" {...register('categoryId')}>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+          <select className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" {...register('categoryId')}>
             <option value="">Select Category</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -173,18 +172,18 @@ export default function AdminProductForm() {
           </select>
         </div>
 
-        <div className="admin-product-form-field">
-          <label>Description</label>
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
           <textarea
             rows={4}
-            className="admin-product-form-textarea"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-y"
             {...register('description')}
           />
         </div>
 
-        <div className="admin-product-form-actions">
-          <button type="submit" className="admin-product-form-save">{isEditing ? 'Update' : 'Create'} Product</button>
-          <Link to="/admin/products" className="admin-product-form-cancel">Cancel</Link>
+        <div className="flex gap-3">
+          <button type="submit" className="bg-success text-white px-6 py-2.5 rounded-lg font-medium text-sm hover:opacity-90">{isEditing ? 'Update' : 'Create'} Product</button>
+          <Link to="/admin/products" className="text-gray-600 hover:text-gray-900 px-6 py-2.5 text-sm">Cancel</Link>
         </div>
       </form>
     </div>
