@@ -4,14 +4,13 @@ import orderService from '../../services/orderService';
 import { unwrap } from '../../services/api';
 import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
-import './userPages.css';
 
-const statusColors = {
-  PENDING: '#f39c12',
-  PAID: '#3498db',
-  SHIPPED: '#9b59b6',
-  DELIVERED: '#27ae60',
-  CANCELLED: '#e74c3c',
+const statusBg = {
+  PENDING: 'bg-warning',
+  PAID: 'bg-blue-500',
+  SHIPPED: 'bg-purple-500',
+  DELIVERED: 'bg-success',
+  CANCELLED: 'bg-danger',
 };
 
 export default function OrderDetail() {
@@ -33,9 +32,9 @@ export default function OrderDetail() {
   if (loading) return <Loading />;
   if (error || !order) {
     return (
-      <div className="order-detail-page">
+      <div className="max-w-3xl mx-auto px-4 py-8">
         <ErrorMessage message={error || 'Order not found'} />
-        <Link to="/orders" className="order-detail-link">&larr; Back to Orders</Link>
+        <Link to="/orders" className="text-primary hover:underline mt-4 inline-block">&larr; Back to Orders</Link>
       </div>
     );
   }
@@ -43,57 +42,58 @@ export default function OrderDetail() {
   const ship = order.shippingAddress || {};
 
   return (
-    <div className="order-detail-page">
-      <Link to="/orders" className="order-detail-link">&larr; Back to Orders</Link>
-      <h1 className="order-detail-title">Order {order.id}</h1>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <Link to="/orders" className="text-primary hover:underline inline-block mb-4">&larr; Back to Orders</Link>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Order {order.id}</h1>
 
-      <div className="order-detail-card">
-        <div className="order-detail-summary">
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+        <div className="flex items-center justify-between">
           <div>
-            <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
-            <p><strong>Status:</strong>
-              <span
-                className="order-detail-badge"
-                style={{ '--badge-color': statusColors[order.status] || '#888' }}
-              >
+            <p className="text-sm text-gray-700"><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
+            <p className="text-sm text-gray-700 mt-1"><strong>Status:</strong>{' '}
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ml-1 ${statusBg[order.status] || 'bg-gray-400'}`}>
                 {order.status}
               </span>
             </p>
           </div>
-          <p className="order-detail-price">₦{Number(order.totalAmount).toFixed(2)}</p>
+          <p className="text-xl font-bold text-gray-900">₦{Number(order.totalAmount).toFixed(2)}</p>
         </div>
       </div>
 
-      <div className="order-detail-card">
-        <h3>Shipping Address</h3>
-        <p>{ship.fullName}</p>
-        <p>{ship.line1}</p>
-        <p>{ship.city}, {ship.state} {ship.postalCode}</p>
-        <p>{ship.country}</p>
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+        <h3 className="font-semibold text-gray-900 mb-3">Shipping Address</h3>
+        <div className="text-sm text-gray-700 space-y-1">
+          <p>{ship.fullName}</p>
+          <p>{ship.line1}</p>
+          <p>{ship.city}, {ship.state} {ship.postalCode}</p>
+          <p>{ship.country}</p>
+        </div>
       </div>
 
-      <div className="order-detail-card">
-        <h3>Order Items</h3>
-        <table className="order-detail-table">
-          <thead>
-            <tr className="order-detail-thead">
-              <th className="order-detail-th">Product</th>
-              <th className="order-detail-th">Qty</th>
-              <th className="order-detail-th">Unit Price</th>
-              <th className="order-detail-th">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(order.items || []).map((item, idx) => (
-              <tr key={item.productId || idx} className="order-detail-tr">
-                <td className="order-detail-td">{item.productName || 'Product'}</td>
-                <td className="order-detail-td">{item.quantity}</td>
-                <td className="order-detail-td">₦{Number(item.unitPrice).toFixed(2)}</td>
-                <td className="order-detail-td">₦{(Number(item.unitPrice) * item.quantity).toFixed(2)}</td>
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+        <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Product</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Qty</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Unit Price</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {(order.items || []).map((item, idx) => (
+                <tr key={item.productId || idx}>
+                  <td className="py-3 text-sm text-gray-900">{item.productName || 'Product'}</td>
+                  <td className="py-3 text-sm text-gray-700">{item.quantity}</td>
+                  <td className="py-3 text-sm text-gray-700">₦{Number(item.unitPrice).toFixed(2)}</td>
+                  <td className="py-3 text-sm text-gray-900 font-medium">₦{(Number(item.unitPrice) * item.quantity).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
