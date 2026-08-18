@@ -15,23 +15,18 @@ export default function Avatar({ user, size = 40, style }) {
   const initials = getInitials(name, email);
   const color = getColor(name || email);
 
+  const sizeClasses = {
+    24: 'w-6 h-6 text-[10px]',
+    32: 'w-8 h-8 text-xs',
+    40: 'w-10 h-10 text-sm',
+  };
+
+  const sizeClass = sizeClasses[size] || `w-10 h-10 text-sm`;
+
   return (
     <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        background: color,
-        color: '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 600,
-        fontSize: size * 0.4,
-        flexShrink: 0,
-        userSelect: 'none',
-        ...style,
-      }}
+      className={`${sizeClass} rounded-full flex items-center justify-center font-semibold text-white shrink-0 select-none`}
+      style={{ background: color, ...(style || {}) }}
       aria-label={name || 'User avatar'}
     >
       {initials}
