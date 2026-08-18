@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import productService from '../../services/productService';
 import categoryService from '../../services/categoryService';
@@ -8,14 +8,25 @@ import Pagination from '../../components/common/Pagination';
 
 const ITEMS_PER_PAGE = 8;
 
+const sortOptions = [
+  { label: 'Default', sortBy: 'id', direction: 'asc' },
+  { label: 'Price: Low to High', sortBy: 'price', direction: 'asc' },
+  { label: 'Price: High to Low', sortBy: 'price', direction: 'desc' },
+  { label: 'Newest', sortBy: 'id', direction: 'desc' },
+];
+
 export default function ProductList() {
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get('category') || '';
   const initialSearch = searchParams.get('q') || '';
 
+  const [searchInput, setSearchInput] = useState(initialSearch);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortIndex, setSortIndex] = useState(0);
+
+  const debounceRef = useRef(null);
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -34,11 +45,12 @@ export default function ProductList() {
   useEffect(() => {
     setLoading(true);
     setError('');
+    const { sortBy, direction } = sortOptions[sortIndex];
     const params = {
       page: currentPage - 1,
       size: ITEMS_PER_PAGE,
-      sortBy: 'id',
-      direction: 'asc',
+      sortBy,
+      direction,
     };
     if (searchTerm) params.name = searchTerm;
     if (selectedCategory) params.categoryId = selectedCategory;
@@ -52,7 +64,7 @@ export default function ProductList() {
     }).finally(() => {
       setLoading(false);
     });
-  }, [searchTerm, selectedCategory, currentPage]);
+  }, [searchTerm, selectedCategory, currentPage, sortIndex]);
 
   const totalPages = Math.ceil(totalElements / ITEMS_PER_PAGE);
 
@@ -61,10 +73,17 @@ export default function ProductList() {
     setCurrentPage(1);
   };
 
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
+  const handleSearchInput = useCallback((e) => {
+    const val = e.target.value;
+    setSearchInput(val);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearchTerm(val);
+      setCurrentPage(1);
+    }, 300);
+  }, []);
+
+  useEffect(() => () => clearTimeout(debounceRef.current), []);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -95,13 +114,24 @@ export default function ProductList() {
           ))}
         </div>
 
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={searchTerm}
-          onChange={handleSearch}
-          className="w-full sm:w-64 px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-        />
+        <div className="flex gap-3">
+          <select
+            value={sortIndex}
+            onChange={(e) => { setSortIndex(Number(e.target.value)); setCurrentPage(1); }}
+            className="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white"
+          >
+            {sortOptions.map((opt, i) => (
+              <option key={i} value={i}>{opt.label}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchInput}
+            onChange={handleSearchInput}
+            className="w-full sm:w-56 px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          />
+        </div>
       </div>
 
       <p className="text-sm text-gray-500 mb-6">{totalElements} product(s) found</p>

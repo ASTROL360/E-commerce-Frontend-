@@ -1,4 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
+import { ToastProvider } from './contexts/ToastContext'
+import { WishlistProvider } from './contexts/WishlistContext'
 import Layout from './components/layout/Layout'
 import AdminLayout from './components/layout/AdminLayout'
 import ProtectedRoute from './components/auth/ProtectedRoute'
@@ -17,6 +19,7 @@ import Profile from './pages/user/Profile'
 import Orders from './pages/user/Orders'
 import OrderDetail from './pages/user/OrderDetail'
 import Addresses from './pages/user/Addresses'
+import Wishlist from './pages/user/Wishlist'
 import Dashboard from './pages/admin/Dashboard'
 import AdminProducts from './pages/admin/AdminProducts'
 import AdminProductForm from './pages/admin/AdminProductForm'
@@ -30,6 +33,8 @@ import NotFound from './pages/NotFound'
 
 function App() {
   return (
+    <ToastProvider>
+    <WishlistProvider>
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
@@ -51,6 +56,7 @@ function App() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/addresses" element={<Addresses />} />
+          <Route path="/wishlist" element={<Wishlist />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
@@ -68,6 +74,8 @@ function App() {
         </Route>
       </Route>
     </Routes>
+    </WishlistProvider>
+    </ToastProvider>
   )
 }
 

@@ -6,6 +6,7 @@ const orderService = {
   getMyOrders: (params = {}) => api.get('/orders', { params }),
   getAllOrders: (params = {}) => api.get('/orders/admin/all', { params }),
   updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
+  cancelOrder: (id) => api.post(`/orders/${id}/cancel`),
 }
 
 export default orderService

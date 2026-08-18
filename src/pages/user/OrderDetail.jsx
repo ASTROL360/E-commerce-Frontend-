@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import orderService from '../../services/orderService';
+import { useToast } from '../../contexts/ToastContext';
 import { unwrap } from '../../services/api';
 import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 const statusBg = {
   PENDING: 'bg-warning',
@@ -15,11 +17,14 @@ const statusBg = {
 
 export default function OrderDetail() {
   const { id } = useParams();
+  const toast = useToast();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
-  useEffect(() => {
+  const loadOrder = () => {
     setLoading(true);
     setError('');
     orderService.getById(id).then((res) => {
@@ -27,7 +32,23 @@ export default function OrderDetail() {
     }).catch((err) => {
       setError(err.message || 'Failed to load order');
     }).finally(() => setLoading(false));
-  }, [id]);
+  };
+
+  useEffect(() => { loadOrder(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleCancelOrder = async () => {
+    setCancelConfirmOpen(false);
+    setCancelling(true);
+    try {
+      await orderService.cancelOrder(id);
+      toast.success('Order cancelled');
+      loadOrder();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   if (loading) return <Loading />;
   if (error || !order) {
@@ -40,6 +61,7 @@ export default function OrderDetail() {
   }
 
   const ship = order.shippingAddress || {};
+  const canCancel = ['PENDING', 'PAID'].includes(order.status);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -58,6 +80,17 @@ export default function OrderDetail() {
           </div>
           <p className="text-xl font-bold text-gray-900">₦{Number(order.totalAmount).toFixed(2)}</p>
         </div>
+        {canCancel && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <button
+              onClick={() => setCancelConfirmOpen(true)}
+              disabled={cancelling}
+              className="bg-danger text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-danger-hover disabled:opacity-50 transition-colors"
+            >
+              {cancelling ? 'Cancelling...' : 'Cancel Order'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
@@ -95,6 +128,16 @@ export default function OrderDetail() {
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={cancelConfirmOpen}
+        title="Cancel Order"
+        message="Are you sure you want to cancel this order? This action cannot be undone."
+        confirmText="Cancel Order"
+        danger
+        onConfirm={handleCancelOrder}
+        onCancel={() => setCancelConfirmOpen(false)}
+      />
     </div>
   );
 }

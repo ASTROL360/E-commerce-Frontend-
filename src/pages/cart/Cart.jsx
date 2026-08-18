@@ -63,7 +63,8 @@ export default function Cart() {
                 <span className="w-8 h-8 flex items-center justify-center text-sm font-medium text-gray-900 border-x border-gray-200">{item.quantity}</span>
                 <button
                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-50 rounded-r-lg transition-colors text-sm"
+                  disabled={item.quantity >= item.stockQuantity}
+                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-50 rounded-r-lg transition-colors text-sm disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   +
                 </button>
@@ -71,6 +72,9 @@ export default function Cart() {
               <p className="text-sm font-semibold text-gray-900 w-24 text-right flex-shrink-0">
                 ₦{(Number(item.unitPrice) * item.quantity).toFixed(2)}
               </p>
+              {item.quantity >= item.stockQuantity && (
+                <span className="text-[10px] text-warning font-medium hidden sm:block">Max stock</span>
+              )}
               <button
                 onClick={() => removeItem(item.id)}
                 className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-danger rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"

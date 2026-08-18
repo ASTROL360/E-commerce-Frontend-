@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { useAuth } from '../../contexts/AuthContext';
 import { GOOGLE_AUTH_URL } from '../../services/authService';
 import ErrorMessage from '../../components/common/ErrorMessage';
+import PasswordInput from '../../components/common/PasswordInput';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -26,7 +27,7 @@ export default function Register() {
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || location.state?.from || '/';
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
   });
 
@@ -65,13 +66,19 @@ export default function Register() {
             {errors.email && <p className="text-danger text-sm mt-1">{errors.email.message}</p>}
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input type="password" {...register('password')} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+            <PasswordInput
+              control={control}
+              name="password"
+              label="Password"
+            />
             {errors.password && <p className="text-danger text-sm mt-1">{errors.password.message}</p>}
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-            <input type="password" {...register('confirmPassword')} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+            <PasswordInput
+              control={control}
+              name="confirmPassword"
+              label="Confirm Password"
+            />
             {errors.confirmPassword && <p className="text-danger text-sm mt-1">{errors.confirmPassword.message}</p>}
           </div>
           <button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary-hover text-white font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50">

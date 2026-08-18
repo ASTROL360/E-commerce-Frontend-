@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useWishlist } from '../../contexts/WishlistContext';
 import { getPrimaryProductImage, getCloudinaryUrl } from '../../utils/productImageUtils';
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart();
   const { isAdmin, isAuthenticated } = useAuth();
+  const { toggleWishlist, isWishlisted } = useWishlist();
   const navigate = useNavigate();
   const [addError, setAddError] = useState('');
   const outOfStock = product.stockQuantity === 0;
   const primaryImage = getPrimaryProductImage(product);
+  const wishlisted = isWishlisted(product.id);
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
@@ -27,6 +30,12 @@ export default function ProductCard({ product }) {
       setAddError(err.message || 'Failed to add to cart');
       setTimeout(() => setAddError(''), 3000);
     }
+  };
+
+  const handleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(product.id);
   };
 
   return (
@@ -47,6 +56,15 @@ export default function ProductCard({ product }) {
               Out of Stock
             </span>
           )}
+          <button
+            onClick={handleWishlist}
+            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
+            aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <svg className="w-4 h-4" fill={wishlisted ? '#dc2626' : 'none'} viewBox="0 0 24 24" stroke={wishlisted ? '#dc2626' : 'currentColor'} strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </button>
         </div>
 
         <div className="p-4">

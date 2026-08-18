@@ -80,24 +80,7 @@ export default function Checkout() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Checkout</h1>
-
-      <div className="flex items-center gap-0 mb-8 max-w-lg">
-        <div className="flex items-center gap-2">
-          <span className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">1</span>
-          <span className="text-sm font-medium text-gray-900">Address</span>
-        </div>
-        <div className="flex-1 h-px bg-gray-200 mx-3" />
-        <div className="flex items-center gap-2">
-          <span className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">2</span>
-          <span className="text-sm font-medium text-gray-400">Review</span>
-        </div>
-        <div className="flex-1 h-px bg-gray-200 mx-3" />
-        <div className="flex items-center gap-2">
-          <span className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">3</span>
-          <span className="text-sm font-medium text-gray-400">Payment</span>
-        </div>
-      </div>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
 
       {error && <ErrorMessage message={error} />}
 

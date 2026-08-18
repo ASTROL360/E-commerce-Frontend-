@@ -2,14 +2,18 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import productService from '../services/productService';
 import categoryService from '../services/categoryService';
+import { useToast } from '../contexts/ToastContext';
 import { unwrap } from '../services/api';
 import ProductCard from '../components/products/ProductCard';
 
 export default function Home() {
+  const toast = useToast();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
     let done = 0;
@@ -134,16 +138,31 @@ export default function Home() {
             <div className="bg-primary rounded-2xl px-8 py-12 text-center">
               <h2 className="text-2xl font-bold text-white mb-3">Stay in the Loop</h2>
               <p className="text-primary-light mb-6">Get the latest deals and new arrivals delivered to your inbox.</p>
-              <div className="flex max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-l-xl text-sm focus:outline-none"
-                />
-                <button className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-r-xl text-sm font-semibold transition-colors">
-                  Subscribe
-                </button>
-              </div>
+              {subscribed ? (
+                <p className="text-white font-medium">Thanks for subscribing!</p>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newsletterEmail) return;
+                    setSubscribed(true);
+                    toast.success('Thanks for subscribing!');
+                  }}
+                  className="flex max-w-md mx-auto"
+                >
+                  <input
+                    type="email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                    className="flex-1 px-4 py-3 rounded-l-xl text-sm focus:outline-none"
+                  />
+                  <button type="submit" className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-r-xl text-sm font-semibold transition-colors">
+                    Subscribe
+                  </button>
+                </form>
+              )}
             </div>
           </section>
         </>

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 import cartService from '../services/cartService';
 import { unwrap } from '../services/api';
 
@@ -7,6 +8,7 @@ const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
   const { isAuthenticated } = useAuth();
+  const toast = useToast();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const pendingRef = useRef(false);
@@ -41,10 +43,12 @@ export function CartProvider({ children }) {
     try {
       await cartService.addItem(productId, quantity);
       await loadCart();
+      toast.success('Added to cart');
     } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to add item to cart');
       throw new Error(e.response?.data?.message || 'Failed to add item to cart');
     }
-  }, [loadCart]);
+  }, [loadCart, toast]);
 
   const updateQuantity = useCallback(async (itemId, quantity) => {
     try {
@@ -64,19 +68,21 @@ export function CartProvider({ children }) {
     try {
       await cartService.removeItem(itemId);
       setItems((prev) => prev.filter((item) => item.id !== itemId));
+      toast.info('Item removed');
     } catch (e) {
-      throw new Error(e.response?.data?.message || 'Failed to remove item');
+      toast.error(e.response?.data?.message || 'Failed to remove item');
     }
-  }, []);
+  }, [toast]);
 
   const clearCart = useCallback(async () => {
     try {
       await cartService.clear();
       setItems([]);
+      toast.info('Cart cleared');
     } catch (e) {
-      throw new Error(e.response?.data?.message || 'Failed to clear cart');
+      toast.error(e.response?.data?.message || 'Failed to clear cart');
     }
-  }, []);
+  }, [toast]);
 
   const subtotal = items.reduce(
     (sum, item) => sum + Number(item.lineTotal ?? Number(item.unitPrice) * item.quantity),

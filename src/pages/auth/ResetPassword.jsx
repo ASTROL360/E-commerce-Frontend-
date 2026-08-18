@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import authService from '../../services/authService';
+import PasswordInput from '../../components/common/PasswordInput';
 
 const schema = z.object({
   pin: z.string().min(4, 'PIN must be at least 4 digits').regex(/^\d+$/, 'PIN must contain only digits'),
@@ -21,7 +22,7 @@ export default function ResetPassword() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
   });
 
@@ -71,20 +72,18 @@ export default function ResetPassword() {
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-            <input
-              type="password"
-              {...register('newPassword')}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+            <PasswordInput
+              control={control}
+              name="newPassword"
+              label="New Password"
             />
             {errors.newPassword && <p className="text-danger text-sm mt-1">{errors.newPassword.message}</p>}
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-            <input
-              type="password"
-              {...register('confirmPassword')}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+            <PasswordInput
+              control={control}
+              name="confirmPassword"
+              label="Confirm Password"
             />
             {errors.confirmPassword && <p className="text-danger text-sm mt-1">{errors.confirmPassword.message}</p>}
           </div>

@@ -4,21 +4,25 @@ import productService from '../../services/productService';
 import reviewService from '../../services/reviewService';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import { unwrap } from '../../services/api';
 import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import ProductCard from '../../components/products/ProductCard';
 import { getCloudinaryUrl } from '../../utils/productImageUtils';
 
 export default function ProductDetail() {
   const { id } = useParams();
   const { addItem } = useCart();
   const { isAdmin, isAuthenticated } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   const [reviewData, setReviewData] = useState({
     content: [],
@@ -35,6 +39,7 @@ export default function ProductDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [deleteReviewTarget, setDeleteReviewTarget] = useState(false);
+  const [adminDeleteReviewId, setAdminDeleteReviewId] = useState(null);
 
   const loadReviews = useCallback(() => {
     setReviewLoading(true);
@@ -49,7 +54,14 @@ export default function ProductDetail() {
     setLoading(true);
     setError('');
     productService.getById(id).then((res) => {
-      setProduct(unwrap(res));
+      const p = unwrap(res);
+      setProduct(p);
+      if (p?.categoryId) {
+        productService.getAll({ categoryId: p.categoryId, page: 0, size: 5 }).then((relRes) => {
+          const rel = unwrap(relRes)?.content || [];
+          setRelatedProducts(rel.filter((r) => r.id !== Number(id)).slice(0, 4));
+        }).catch(() => {});
+      }
     }).catch((err) => {
       setError(err.message || 'Failed to load product');
     }).finally(() => {
@@ -88,10 +100,12 @@ export default function ProductDetail() {
   };
 
   const confirmDeleteReview = async () => {
+    const targetId = adminDeleteReviewId || reviewData.myReview?.id;
     setDeleteReviewTarget(false);
-    if (!reviewData.myReview) return;
+    setAdminDeleteReviewId(null);
+    if (!targetId) return;
     try {
-      await reviewService.remove(reviewData.myReview.id);
+      await reviewService.remove(targetId);
       setRating(5);
       setComment('');
       setEditing(false);
@@ -141,11 +155,11 @@ export default function ProductDetail() {
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 overflow-hidden rounded-2xl">
           <img
             src={getCloudinaryUrl(product.imageUrl, 800) || '/placeholder.png'}
             alt={product.name}
-            className="w-full aspect-square object-cover rounded-2xl"
+            className="w-full aspect-square object-cover rounded-2xl transition-transform duration-300 hover:scale-105"
           />
         </div>
 
@@ -217,6 +231,7 @@ export default function ProductDetail() {
                   return;
                 }
                 addItem(product.id, quantity);
+                toast.success('Added to cart');
               }}
               className="w-full mt-6 bg-primary hover:bg-primary-hover text-white font-semibold py-3 rounded-xl transition-colors"
             >
@@ -357,6 +372,11 @@ export default function ProductDetail() {
                     <button onClick={handleDeleteReview} className="text-sm text-danger hover:underline font-medium">Delete</button>
                   </div>
                 )}
+                {isAdmin && myReviewId !== review.id && (
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                    <button onClick={() => { setAdminDeleteReviewId(review.id); setDeleteReviewTarget(true); }} className="text-sm text-danger hover:underline font-medium">Delete (Admin)</button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -366,12 +386,23 @@ export default function ProductDetail() {
       <ConfirmDialog
         open={deleteReviewTarget}
         title="Delete Review"
-        message="Are you sure you want to delete your review?"
+        message="Are you sure you want to delete this review?"
         confirmText="Delete"
         danger
         onConfirm={confirmDeleteReview}
-        onCancel={() => setDeleteReviewTarget(false)}
+        onCancel={() => { setDeleteReviewTarget(false); setAdminDeleteReviewId(null); }}
       />
+
+      {relatedProducts.length > 0 && (
+        <section className="mt-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">You May Also Like</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {relatedProducts.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
