@@ -56,12 +56,12 @@ export default function AdminOrders() {
     : orders.filter((o) => o.status === statusFilter);
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Orders</h1>
 
       {error && <p className="text-danger mb-4">{error}</p>}
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         {['ALL', 'PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
           <button
             key={s}
@@ -76,7 +76,7 @@ export default function AdminOrders() {
       {loading ? (
         <p className="text-gray-500">Loading orders...</p>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto bg-white rounded-xl border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
