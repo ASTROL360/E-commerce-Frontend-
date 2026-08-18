@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import productService from '../../services/productService';
 import reviewService from '../../services/reviewService';
@@ -118,9 +118,11 @@ export default function ProductDetail() {
   if (loading) return <Loading />;
   if (error || !product) {
     return (
-      <div className="product-detail-error-wrap">
+      <div className="max-w-6xl mx-auto px-4 py-16 text-center">
         <ErrorMessage message={error || 'Product not found'} />
-        <Link to="/products">Back to Products</Link>
+        <Link to="/products" className="mt-4 inline-block text-primary hover:underline font-medium">
+          Back to Products
+        </Link>
       </div>
     );
   }
@@ -130,50 +132,80 @@ export default function ProductDetail() {
   const myReviewId = myReview?.id;
 
   return (
-    <div className="product-detail-page">
-      <Link to="/products" className="product-detail-back">
-        &larr; Back to Products
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <Link to="/products" className="inline-flex items-center text-primary hover:underline font-medium mb-6">
+        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Products
       </Link>
-      <div className="product-detail-layout">
-        <div className="product-detail-gallery">
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+        <div className="lg:col-span-3">
           <img
             src={getCloudinaryUrl(product.imageUrl, 800) || '/placeholder.png'}
             alt={product.name}
-            className="product-detail-img"
+            className="w-full aspect-square object-cover rounded-2xl"
           />
         </div>
-        <div className="product-detail-info">
+
+        <div className="lg:col-span-2">
           {(product.categoryName || product.category) && (
-            <span className="product-detail-category">{product.categoryName || product.category?.name}</span>
+            <nav className="text-sm text-gray-500 mb-3">
+              <span className="hover:text-primary cursor-pointer">Home</span>
+              <span className="mx-2">/</span>
+              <span className="hover:text-primary cursor-pointer">Products</span>
+              <span className="mx-2">/</span>
+              <span className="text-gray-700">{product.categoryName || product.category?.name}</span>
+            </nav>
           )}
-          <h1 className="product-detail-name">{product.name}</h1>
-          <p className="product-detail-price">
+
+          <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
+
+          <p className="text-2xl font-bold text-primary mt-4">
             ₦{Number(product.price).toFixed(2)}
           </p>
-          <p className="product-detail-desc">{product.description}</p>
 
           {reviewCount > 0 && (
-            <div className="product-detail-rating-summary">
+            <div className="flex items-center gap-2 mt-4">
               <Stars value={Math.round(averageRating)} size="1.1rem" />
-              <span className="product-detail-rating-text">{averageRating.toFixed(1)} ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
+              <span className="text-sm text-gray-500">{averageRating.toFixed(1)} ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
             </div>
           )}
 
-          {inStock ? (
-            <p className="product-detail-stock">In Stock ({product.stockQuantity} available)</p>
-          ) : (
-            <p className="product-detail-stock product-detail-stock--out">Out of Stock</p>
-          )}
+          <p className="text-gray-600 mt-6 leading-relaxed">{product.description}</p>
+
+          <div className="mt-6">
+            {inStock ? (
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-success">
+                <span className="w-2 h-2 bg-success rounded-full" />
+                In Stock ({product.stockQuantity} available)
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-danger">
+                <span className="w-2 h-2 bg-danger rounded-full" />
+                Out of Stock
+              </span>
+            )}
+          </div>
 
           {inStock && !isAdmin && (
-            <div className="product-detail-qty">
-              <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="product-detail-qty-btn">
-                -
-              </button>
-              <span className="product-detail-qty-val">{quantity}</span>
-              <button onClick={() => setQuantity((q) => Math.min(product.stockQuantity, q + 1))} className="product-detail-qty-btn">
-                +
-              </button>
+            <div className="flex items-center gap-4 mt-6">
+              <div className="flex items-center border border-gray-200 rounded-lg">
+                <button
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 rounded-l-lg transition-colors"
+                >
+                  -
+                </button>
+                <span className="w-12 h-10 flex items-center justify-center font-medium text-gray-900 border-x border-gray-200">{quantity}</span>
+                <button
+                  onClick={() => setQuantity((q) => Math.min(product.stockQuantity, q + 1))}
+                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 rounded-r-lg transition-colors"
+                >
+                  +
+                </button>
+              </div>
             </div>
           )}
 
@@ -186,22 +218,43 @@ export default function ProductDetail() {
                 }
                 addItem(product.id, quantity);
               }}
-              className="product-detail-add-btn"
+              className="w-full mt-6 bg-primary hover:bg-primary-hover text-white font-semibold py-3 rounded-xl transition-colors"
             >
               Add to Cart
             </button>
           )}
+
+          <div className="flex items-center gap-6 mt-6 pt-6 border-t border-gray-100">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+              Free Shipping
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Secure Checkout
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z" />
+              </svg>
+              Easy Returns
+            </div>
+          </div>
         </div>
       </div>
 
-      <section className="product-detail-reviews">
-        <h2 className="product-detail-reviews-title">Reviews</h2>
+      <section className="mt-16">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Reviews</h2>
 
         {reviewError && <ErrorMessage message={reviewError} />}
 
         {!isAuthenticated && (
-          <p className="product-detail-login-hint">
-            <Link to={`/login?returnUrl=${encodeURIComponent(window.location.pathname)}`} className="product-detail-login-link">
+          <p className="text-gray-500 mb-6">
+            <Link to={`/login?returnUrl=${encodeURIComponent(window.location.pathname)}`} className="text-primary hover:underline font-medium">
               Log in
             </Link>{' '}
             to review this product after your order has been delivered.
@@ -209,12 +262,12 @@ export default function ProductDetail() {
         )}
 
         {canReview && !editing && (
-          <div className="product-detail-review-form">
-            <h3>Write a Review</h3>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+            <h3 className="font-semibold text-gray-900 mb-4">Write a Review</h3>
             {formError && <ErrorMessage message={formError} />}
             <form onSubmit={handleSubmitReview}>
-              <label className="product-detail-form-label">Your rating</label>
-              <div className="product-detail-form-stars">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Your rating</label>
+              <div className="mb-4">
                 <Stars value={rating} onChange={setRating} size="1.6rem" />
               </div>
               <textarea
@@ -222,10 +275,14 @@ export default function ProductDetail() {
                 onChange={(e) => setComment(e.target.value)}
                 rows={4}
                 placeholder="Share your experience with this product (optional)..."
-                className="product-detail-textarea"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                 maxLength={2000}
               />
-              <button type="submit" className="product-detail-submit-btn" disabled={submitting}>
+              <button
+                type="submit"
+                className="mt-4 bg-primary hover:bg-primary-hover text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50"
+                disabled={submitting}
+              >
                 {submitting ? 'Submitting...' : 'Submit Review'}
               </button>
             </form>
@@ -233,12 +290,12 @@ export default function ProductDetail() {
         )}
 
         {editing && myReview && (
-          <div className="product-detail-review-form">
-            <h3>Edit Your Review</h3>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+            <h3 className="font-semibold text-gray-900 mb-4">Edit Your Review</h3>
             {formError && <ErrorMessage message={formError} />}
             <form onSubmit={handleSubmitReview}>
-              <label className="product-detail-form-label">Your rating</label>
-              <div className="product-detail-form-stars">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Your rating</label>
+              <div className="mb-4">
                 <Stars value={rating} onChange={setRating} size="1.6rem" />
               </div>
               <textarea
@@ -246,14 +303,22 @@ export default function ProductDetail() {
                 onChange={(e) => setComment(e.target.value)}
                 rows={4}
                 placeholder="Share your experience with this product (optional)..."
-                className="product-detail-textarea"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                 maxLength={2000}
               />
-              <div className="product-detail-form-actions">
-                <button type="submit" className="product-detail-submit-btn" disabled={submitting}>
+              <div className="flex gap-3 mt-4">
+                <button
+                  type="submit"
+                  className="bg-primary hover:bg-primary-hover text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50"
+                  disabled={submitting}
+                >
                   {submitting ? 'Saving...' : 'Update Review'}
                 </button>
-                <button type="button" className="product-detail-cancel-btn" onClick={cancelEditing}>
+                <button
+                  type="button"
+                  className="border border-gray-200 text-gray-700 font-medium px-6 py-2.5 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                  onClick={cancelEditing}
+                >
                   Cancel
                 </button>
               </div>
@@ -262,37 +327,34 @@ export default function ProductDetail() {
         )}
 
         {isAuthenticated && !canReview && !myReview && (
-          <p className="product-detail-review-wait">You can review this product after your order has been delivered.</p>
+          <p className="text-gray-500 mb-6">You can review this product after your order has been delivered.</p>
         )}
 
         {reviewLoading ? (
-          <p className="product-detail-review-loading">Loading reviews...</p>
+          <p className="text-gray-500 py-4">Loading reviews...</p>
         ) : reviews.length === 0 ? (
-          <p className="product-detail-review-empty">No reviews yet. Be the first to review this product.</p>
+          <p className="text-gray-500 py-4">No reviews yet. Be the first to review this product.</p>
         ) : (
-          <div className="product-detail-review-list">
+          <div className="space-y-4">
             {reviews.map((review) => (
               <div
                 key={review.id}
-                className="product-detail-review-card"
-                style={{
-                  borderColor: myReviewId === review.id ? '#667eea' : '#e0e0e0',
-                }}
+                className={`bg-white rounded-xl border p-5 ${myReviewId === review.id ? 'border-primary' : 'border-gray-200'}`}
               >
-                <div className="product-detail-review-header">
-                  <strong>{review.userName}</strong>
-                  <span className="product-detail-review-date">
+                <div className="flex items-center justify-between mb-2">
+                  <strong className="text-gray-900">{review.userName}</strong>
+                  <span className="text-sm text-gray-400">
                     {new Date(review.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <div className="product-detail-review-stars">
+                <div className="mb-2">
                   <Stars value={review.rating} size="1rem" />
                 </div>
-                {review.comment && <p className="product-detail-review-comment">{review.comment}</p>}
+                {review.comment && <p className="text-gray-600 text-sm leading-relaxed">{review.comment}</p>}
                 {myReviewId === review.id && (
-                  <div className="product-detail-review-actions">
-                    <button onClick={startEditing} className="product-detail-edit-btn">Edit</button>
-                    <button onClick={handleDeleteReview} className="product-detail-delete-btn">Delete</button>
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                    <button onClick={startEditing} className="text-sm text-primary hover:underline font-medium">Edit</button>
+                    <button onClick={handleDeleteReview} className="text-sm text-danger hover:underline font-medium">Delete</button>
                   </div>
                 )}
               </div>
@@ -316,7 +378,7 @@ export default function ProductDetail() {
 
 function Stars({ value, onChange, size = '1.2rem' }) {
   return (
-    <div className="star-container" style={{ fontSize: size }}>
+    <div className="flex gap-0.5" style={{ fontSize: size }}>
       {[1, 2, 3, 4, 5].map((n) => (
         <button
           key={n}
@@ -324,7 +386,7 @@ function Stars({ value, onChange, size = '1.2rem' }) {
           onClick={onChange ? () => onChange(n) : undefined}
           disabled={!onChange}
           aria-label={`${n} star${n > 1 ? 's' : ''}`}
-          className="star-btn"
+          className="transition-colors"
           style={{
             cursor: onChange ? 'pointer' : 'default',
             color: n <= value ? '#f1c40f' : '#ddd',
