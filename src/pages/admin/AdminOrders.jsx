@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import orderService from '../../services/orderService';
 import { unwrap } from '../../services/api';
-import './admin.css';
 
-const statusColors = {
-  PENDING: '#f39c12',
-  PAID: '#3498db',
-  SHIPPED: '#9b59b6',
-  DELIVERED: '#27ae60',
-  CANCELLED: '#e74c3c',
+const statusBg = {
+  PENDING: 'bg-warning',
+  PAID: 'bg-blue-500',
+  SHIPPED: 'bg-purple-500',
+  DELIVERED: 'bg-success',
+  CANCELLED: 'bg-danger',
 };
 
 const quickActions = (status) => {
@@ -18,7 +17,7 @@ const quickActions = (status) => {
   return [{ to: 'SHIPPED', label: 'Ship' }, { to: 'CANCELLED', label: 'Cancel' }];
 };
 
-const actionColor = (to) => (to === 'CANCELLED' ? '#e74c3c' : to === 'DELIVERED' ? '#27ae60' : '#9b59b6');
+const actionBg = (to) => (to === 'CANCELLED' ? 'bg-danger' : to === 'DELIVERED' ? 'bg-success' : 'bg-purple-500');
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -57,21 +56,17 @@ export default function AdminOrders() {
     : orders.filter((o) => o.status === statusFilter);
 
   return (
-    <div className="admin-orders-page">
-      <h1>Orders</h1>
+    <div className="p-6 lg:p-8">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Orders</h1>
 
-      {error && <p className="admin-orders-error">{error}</p>}
+      {error && <p className="text-danger mb-4">{error}</p>}
 
-      <div className="admin-orders-filters">
+      <div className="flex gap-2 mb-4">
         {['ALL', 'PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className="admin-orders-filter-btn"
-            style={{
-              background: statusFilter === s ? '#667eea' : '#e0e0e0',
-              color: statusFilter === s ? '#fff' : '#333',
-            }}
+            className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${statusFilter === s ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
           >
             {s}
           </button>
@@ -79,54 +74,55 @@ export default function AdminOrders() {
       </div>
 
       {loading ? (
-        <p>Loading orders...</p>
+        <p className="text-gray-500">Loading orders...</p>
       ) : (
-        <table className="admin-orders-table">
-          <thead>
-            <tr className="admin-orders-thead-row">
-              <th className="admin-orders-th">ID</th>
-              <th className="admin-orders-th">Customer</th>
-              <th className="admin-orders-th">Date</th>
-              <th className="admin-orders-th">Total</th>
-              <th className="admin-orders-th">Status</th>
-              <th className="admin-orders-th">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((o) => {
-              const ship = o.shippingAddress || {};
-              return (
-                <tr key={o.id} className="admin-orders-tbody-row">
-                  <td className="admin-orders-td">{o.id}</td>
-                  <td className="admin-orders-td">{ship.fullName || '-'}</td>
-                  <td className="admin-orders-td">{new Date(o.createdAt).toLocaleDateString()}</td>
-                  <td className="admin-orders-td">₦{Number(o.totalAmount).toFixed(2)}</td>
-                  <td className="admin-orders-td">
-                    <span className="admin-orders-status-badge" style={{ background: statusColors[o.status] || '#888' }}>
-                      {o.status}
-                    </span>
-                  </td>
-                  <td className="admin-orders-td">
-                    <div className="admin-orders-actions-cell">
-                      <Link to={`/admin/orders/${o.id}`} className="admin-orders-view-btn">View</Link>
-                      {quickActions(o.status).map((a) => (
-                        <button
-                          key={a.to}
-                          onClick={() => handleStatusChange(o.id, a.to)}
-                          disabled={updatingId === o.id}
-                          className="admin-orders-quick-btn"
-                          style={{ background: actionColor(a.to) }}
-                        >
-                          {a.label}
-                        </button>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">ID</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">Customer</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">Date</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">Total</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">Status</th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-3 px-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filtered.map((o) => {
+                const ship = o.shippingAddress || {};
+                return (
+                  <tr key={o.id} className="hover:bg-gray-50">
+                    <td className="py-3 px-4 text-sm text-gray-900">{o.id}</td>
+                    <td className="py-3 px-4 text-sm text-gray-700">{ship.fullName || '-'}</td>
+                    <td className="py-3 px-4 text-sm text-gray-700">{new Date(o.createdAt).toLocaleDateString()}</td>
+                    <td className="py-3 px-4 text-sm text-gray-900 font-medium">₦{Number(o.totalAmount).toFixed(2)}</td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${statusBg[o.status] || 'bg-gray-400'}`}>
+                        {o.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex gap-2">
+                        <Link to={`/admin/orders/${o.id}`} className="bg-primary text-white px-3 py-1 rounded text-sm">View</Link>
+                        {quickActions(o.status).map((a) => (
+                          <button
+                            key={a.to}
+                            onClick={() => handleStatusChange(o.id, a.to)}
+                            disabled={updatingId === o.id}
+                            className={`${actionBg(a.to)} text-white px-3 py-1 rounded text-sm disabled:opacity-50`}
+                          >
+                            {a.label}
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
