@@ -67,9 +67,6 @@ export default function Header() {
             <Link to="/products" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">
               Products
             </Link>
-            <Link to="/about" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">
-              About
-            </Link>
             {isAdmin && (
               <Link to="/admin" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">
                 Admin
@@ -210,13 +207,6 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Products
-              </Link>
-              <Link
-                to="/about"
-                className="block text-sm font-medium text-gray-600 hover:text-primary transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                About
               </Link>
               {isAdmin && (
                 <Link

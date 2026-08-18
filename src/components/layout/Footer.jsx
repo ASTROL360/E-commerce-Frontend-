@@ -20,9 +20,6 @@ export default function Footer() {
             <li>
               <Link to="/products" className="text-sm hover:text-white transition-colors">Products</Link>
             </li>
-            <li>
-              <Link to="/about" className="text-sm hover:text-white transition-colors">About</Link>
-            </li>
           </ul>
         </div>
 
