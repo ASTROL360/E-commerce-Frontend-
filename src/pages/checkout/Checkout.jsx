@@ -79,77 +79,122 @@ export default function Checkout() {
   if (loading) return <Loading />;
 
   return (
-    <div className="checkout-page">
-      <h1>Checkout</h1>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">Checkout</h1>
+
+      <div className="flex items-center gap-0 mb-8 max-w-lg">
+        <div className="flex items-center gap-2">
+          <span className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">1</span>
+          <span className="text-sm font-medium text-gray-900">Address</span>
+        </div>
+        <div className="flex-1 h-px bg-gray-200 mx-3" />
+        <div className="flex items-center gap-2">
+          <span className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">2</span>
+          <span className="text-sm font-medium text-gray-400">Review</span>
+        </div>
+        <div className="flex-1 h-px bg-gray-200 mx-3" />
+        <div className="flex items-center gap-2">
+          <span className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">3</span>
+          <span className="text-sm font-medium text-gray-400">Payment</span>
+        </div>
+      </div>
+
       {error && <ErrorMessage message={error} />}
 
-      <section className="checkout-section">
-        <h2>1. Shipping Address</h2>
-        {addresses.length === 0 ? (
-          <div>
-            <p>No saved addresses. Please add one first.</p>
-            <Link to="/addresses?returnUrl=/checkout" className="checkout-link">Add Address</Link>
-          </div>
-        ) : (
-          <div className="checkout-addr-list">
-            {addresses.map((addr) => (
-              <label
-                key={addr.id}
-                className="checkout-addr-card"
-                style={{
-                  borderColor: selectedAddressId === addr.id ? '#667eea' : '#ddd',
-                }}
-              >
-                <input
-                  type="radio"
-                  name="address"
-                  value={addr.id}
-                  checked={selectedAddressId === addr.id}
-                  onChange={() => setSelectedAddressId(addr.id)}
-                />
-                <div>
-                  <strong>{addr.label}</strong> - {addr.fullName}
-                  <br />
-                  {addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}
-                  <br />
-                  {addr.city}, {addr.state} {addr.postalCode}
-                  <br />
-                  {addr.country}
-                  {addr.isDefault && <span className="checkout-default-badge">Default</span>}
-                </div>
-              </label>
-            ))}
-          </div>
-        )}
-      </section>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <section>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h2>
+            {addresses.length === 0 ? (
+              <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                <p className="text-gray-500 mb-4">No saved addresses. Please add one first.</p>
+                <Link to="/addresses?returnUrl=/checkout" className="inline-block bg-primary hover:bg-primary-hover text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-colors">
+                  Add Address
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {addresses.map((addr) => (
+                  <label
+                    key={addr.id}
+                    className={`block border-2 rounded-xl p-4 cursor-pointer transition-all ${
+                      selectedAddressId === addr.id
+                        ? 'border-primary bg-primary-light'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="address"
+                        value={addr.id}
+                        checked={selectedAddressId === addr.id}
+                        onChange={() => setSelectedAddressId(addr.id)}
+                        className="mt-1 accent-primary"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <strong className="text-gray-900">{addr.label}</strong>
+                          <span className="text-gray-400">-</span>
+                          <span className="text-gray-600">{addr.fullName}</span>
+                          {addr.isDefault && (
+                            <span className="text-xs bg-primary-light text-primary font-medium px-2 py-0.5 rounded-full">Default</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}, {addr.city}, {addr.state} {addr.postalCode}
+                        </p>
+                        <p className="text-sm text-gray-500">{addr.country}</p>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
 
-      <section className="checkout-section">
-        <h2>2. Order Summary</h2>
-        {cart.map((item) => (
-          <div key={item.id} className="checkout-order-item">
-            <span>{item.productName} x {item.quantity}</span>
-            <span>₦{(Number(item.unitPrice) * item.quantity).toFixed(2)}</span>
-          </div>
-        ))}
-        <div className="checkout-order-totals">
-          <div className="checkout-order-row">
-            <span>Subtotal</span><span>₦{subtotal.toFixed(2)}</span>
-          </div>
-          <div className="checkout-order-row">
-            <span>Shipping</span><span>{shipping === 0 ? 'Free' : `₦${shipping.toFixed(2)}`}</span>
-          </div>
-          <div className="checkout-order-total">
-            <span>Total</span><span>₦{total.toFixed(2)}</span>
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-xl border border-gray-200 p-6 sticky top-24">
+            <h2 className="font-semibold text-gray-900 mb-4">Order Summary</h2>
+
+            <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
+              {cart.map((item) => (
+                <div key={item.id} className="flex justify-between text-sm">
+                  <span className="text-gray-600 truncate mr-2">{item.productName} x {item.quantity}</span>
+                  <span className="text-gray-900 font-medium flex-shrink-0">₦{(Number(item.unitPrice) * item.quantity).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-gray-100 pt-4 space-y-2 mb-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Subtotal</span>
+                <span className="text-gray-900 font-medium">₦{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Shipping</span>
+                <span className="text-gray-900 font-medium">{shipping === 0 ? 'Free' : `₦${shipping.toFixed(2)}`}</span>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100 pt-4 mb-6">
+              <div className="flex justify-between">
+                <span className="font-semibold text-gray-900">Total</span>
+                <span className="font-bold text-gray-900 text-lg">₦{total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handlePlaceOrder}
+              disabled={loading || addresses.length === 0}
+              className="w-full bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-semibold transition-colors"
+            >
+              {addresses.length === 0 ? 'Add a shipping address first' : 'Pay with Paystack'}
+            </button>
           </div>
         </div>
-      </section>
-
-      <section className="checkout-section">
-        <h2>3. Payment</h2>
-        <button onClick={handlePlaceOrder} className="checkout-pay-btn" disabled={loading}>
-          {addresses.length === 0 ? 'Add a shipping address first' : 'Pay with Paystack'}
-        </button>
-      </section>
+      </div>
     </div>
   );
 }
