@@ -3,7 +3,6 @@ import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import ConfirmDialog from '../common/ConfirmDialog';
 import Avatar from '../common/Avatar';
-import '../../pages/admin/admin.css';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', end: true },
@@ -24,21 +23,25 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="admin-layout-page">
-      <aside className="admin-layout-sidebar">
-        <div className="admin-layout-brand">
-          <span className="admin-layout-brand-title">ShopHub</span>
-          <span className="admin-layout-brand-sub">Admin Panel</span>
+    <div className="flex min-h-screen bg-gray-50">
+      <aside className="w-64 bg-gray-900 text-white flex flex-col shrink-0">
+        <div className="px-6 py-5 border-b border-gray-800">
+          <span className="text-xl font-bold text-white block">ShopHub</span>
+          <span className="text-xs text-gray-400 uppercase tracking-wider">Admin Panel</span>
         </div>
 
-        <nav className="admin-layout-nav">
+        <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `admin-layout-link${isActive ? ' admin-layout-link-active' : ''}`
+                `block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-primary text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }`
               }
             >
               {item.label}
@@ -46,24 +49,29 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        <div className="admin-layout-footer">
-          <div className="admin-layout-user-info">
-            <div className="admin-layout-user-row">
-              <Avatar user={user} size={32} />
-              <div>
-                <strong className="admin-layout-user-name">{user?.name || 'Admin'}</strong>
-                <div>
-                  <span className="admin-layout-role-badge">{user?.role || 'ADMIN'}</span>
-                </div>
-              </div>
+        <div className="px-4 py-4 border-t border-gray-800 space-y-3">
+          <div className="flex items-center gap-3 px-2">
+            <Avatar user={user} size={32} />
+            <div className="min-w-0">
+              <strong className="block text-sm font-semibold text-white truncate">{user?.name || 'Admin'}</strong>
+              <span className="inline-block mt-0.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary rounded-full">
+                {user?.role || 'ADMIN'}
+              </span>
             </div>
           </div>
-          <Link to="/" className="admin-layout-store-link">View Store</Link>
-          <button onClick={() => setLogoutConfirmOpen(true)} className="admin-layout-logout-btn">Logout</button>
+          <Link to="/" className="block text-center text-xs text-gray-400 hover:text-white transition-colors">
+            View Store
+          </Link>
+          <button
+            onClick={() => setLogoutConfirmOpen(true)}
+            className="w-full py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            Logout
+          </button>
         </div>
       </aside>
 
-      <main className="admin-layout-content">
+      <main className="flex-1 p-6 overflow-auto">
         <Outlet />
       </main>
 
