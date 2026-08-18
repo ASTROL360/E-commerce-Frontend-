@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import productService from '../../services/productService';
 import reviewService from '../../services/reviewService';
@@ -8,8 +8,7 @@ import { unwrap } from '../../services/api';
 import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
-import { getProductImageOptions } from '../../utils/productImageUtils';
-import ImageSlider from '../../components/common/ImageSlider';
+import { getCloudinaryUrl } from '../../utils/productImageUtils';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -127,7 +126,6 @@ export default function ProductDetail() {
   }
 
   const inStock = product.stockQuantity > 0;
-  const images = getProductImageOptions(product);
   const { content: reviews, averageRating, reviewCount, canReview, myReview } = reviewData;
   const myReviewId = myReview?.id;
 
@@ -138,7 +136,11 @@ export default function ProductDetail() {
       </Link>
       <div className="product-detail-layout">
         <div className="product-detail-gallery">
-          <ImageSlider images={images} alt={product.name} />
+          <img
+            src={getCloudinaryUrl(product.imageUrl, 800) || '/placeholder.png'}
+            alt={product.name}
+            className="product-detail-img"
+          />
         </div>
         <div className="product-detail-info">
           {(product.categoryName || product.category) && (
