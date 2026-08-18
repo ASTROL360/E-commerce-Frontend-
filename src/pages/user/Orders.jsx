@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import orderService from '../../services/orderService';
 import { unwrap } from '../../services/api';
-import './userPages.css';
 
-const statusColors = {
-  PENDING: '#f39c12',
-  PAID: '#3498db',
-  SHIPPED: '#9b59b6',
-  DELIVERED: '#27ae60',
-  CANCELLED: '#e74c3c',
+const statusBg = {
+  PENDING: 'bg-warning',
+  PAID: 'bg-blue-500',
+  SHIPPED: 'bg-purple-500',
+  DELIVERED: 'bg-success',
+  CANCELLED: 'bg-danger',
 };
 
 export default function Orders() {
@@ -27,37 +26,34 @@ export default function Orders() {
   }, []);
 
   return (
-    <div className="orders-page">
-      <h1>My Orders</h1>
-      {error && <p className="orders-error">{error}</p>}
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Orders</h1>
+      {error && <p className="text-danger mb-4">{error}</p>}
       {loading ? (
-        <p>Loading orders...</p>
+        <p className="text-gray-500">Loading orders...</p>
       ) : orders.length === 0 ? (
-        <div className="orders-empty">
-          <p>No orders yet.</p>
-          <Link to="/products" className="orders-link">Start Shopping</Link>
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-4">No orders yet.</p>
+          <Link to="/products" className="text-primary hover:underline font-medium">Start Shopping</Link>
         </div>
       ) : (
-        <div className="orders-list">
+        <div className="space-y-3">
           {orders.map((order) => (
-            <Link key={order.id} to={`/orders/${order.id}`} className="orders-card">
-              <div className="orders-card-header">
+            <Link key={order.id} to={`/orders/${order.id}`} className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow block">
+              <div className="flex items-center justify-between mb-3">
                 <div>
-                  <strong>{order.id}</strong>
-                  <span className="orders-card-date">
+                  <strong className="text-gray-900">#{order.id}</strong>
+                  <span className="text-gray-400 text-sm ml-2">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <span
-                  className="orders-badge"
-                  style={{ '--badge-color': statusColors[order.status] || '#888' }}
-                >
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${statusBg[order.status] || 'bg-gray-400'}`}>
                   {order.status}
                 </span>
               </div>
-              <div className="orders-card-footer">
-                <span>{order.items?.length || 0} item(s)</span>
-                <strong>₦{Number(order.totalAmount).toFixed(2)}</strong>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">{order.items?.length || 0} item(s)</span>
+                <strong className="text-gray-900">₦{Number(order.totalAmount).toFixed(2)}</strong>
               </div>
             </Link>
           ))}
