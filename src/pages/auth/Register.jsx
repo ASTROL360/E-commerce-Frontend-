@@ -48,51 +48,51 @@ export default function Register() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h1>Create Account</h1>
+    <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Create Account</h1>
         {error && <ErrorMessage message={error} />}
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="auth-field">
-            <label>Name</label>
-            <input {...register('name')} className="auth-input" />
-            {errors.name && <p className="auth-error">{errors.name.message}</p>}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input {...register('name')} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+            {errors.name && <p className="text-danger text-sm mt-1">{errors.name.message}</p>}
           </div>
-          <div className="auth-field">
-            <label>Email</label>
-            <input type="email" {...register('email')} className="auth-input" />
-            {errors.email && <p className="auth-error">{errors.email.message}</p>}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" {...register('email')} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+            {errors.email && <p className="text-danger text-sm mt-1">{errors.email.message}</p>}
           </div>
-          <div className="auth-field">
-            <label>Password</label>
-            <input type="password" {...register('password')} className="auth-input" />
-            {errors.password && <p className="auth-error">{errors.password.message}</p>}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" {...register('password')} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+            {errors.password && <p className="text-danger text-sm mt-1">{errors.password.message}</p>}
           </div>
-          <div className="auth-field">
-            <label>Confirm Password</label>
-            <input type="password" {...register('confirmPassword')} className="auth-input" />
-            {errors.confirmPassword && <p className="auth-error">{errors.confirmPassword.message}</p>}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+            <input type="password" {...register('confirmPassword')} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+            {errors.confirmPassword && <p className="text-danger text-sm mt-1">{errors.confirmPassword.message}</p>}
           </div>
-          <button type="submit" disabled={loading} className="auth-btn">
+          <button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary-hover text-white font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50">
             {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
 
-        <div className="auth-divider">
-          <hr className="auth-hr" />
-          <span className="auth-divider-text">or</span>
-          <hr className="auth-hr" />
+        <div className="flex items-center gap-3 my-6">
+          <hr className="flex-1 border-gray-300" />
+          <span className="text-sm text-gray-500">or</span>
+          <hr className="flex-1 border-gray-300" />
         </div>
 
-        <button type="button" onClick={handleGoogleRegister} className="auth-google-btn">
+        <button type="button" onClick={handleGoogleRegister} className="w-full bg-white border border-gray-300 text-gray-700 font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
           <GoogleIcon />
           <span>Sign up with Google</span>
         </button>
 
-        <div className="auth-link">
+        <div className="text-sm text-center mt-4 text-gray-600">
           Already have an account?{' '}
-          <Link to={`/login?returnUrl=${encodeURIComponent(returnUrl)}`} className="auth-link-bold">
+          <Link to={`/login?returnUrl=${encodeURIComponent(returnUrl)}`} className="text-primary font-semibold hover:underline">
             Login
           </Link>
         </div>
