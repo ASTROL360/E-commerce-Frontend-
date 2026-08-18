@@ -40,61 +40,61 @@ export default function ResetPassword() {
 
   if (success) {
     return (
-      <div className="auth-page">
-        <div className="auth-card">
-          <h1>Password Reset</h1>
-          <p>Your password has been successfully reset.</p>
-          <Link to="/login" className="auth-link-center">Go to Login</Link>
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">Password Reset</h1>
+          <p className="text-gray-600 text-sm mb-4">Your password has been successfully reset.</p>
+          <Link to="/login" className="block text-center text-primary font-semibold hover:underline text-sm">Go to Login</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h1>Reset Password</h1>
-        {error && <p className="auth-error-global">{error}</p>}
-        {email && <p className="auth-description">Resetting for: <strong>{email}</strong></p>}
+    <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Reset Password</h1>
+        {error && <p className="text-danger text-sm mb-4">{error}</p>}
+        {email && <p className="text-gray-600 text-sm mb-4">Resetting for: <strong>{email}</strong></p>}
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="auth-field">
-            <label>6-Digit PIN</label>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">6-Digit PIN</label>
             <input
               type="text"
               {...register('pin')}
               placeholder="000000"
               maxLength={6}
-              className="auth-input auth-pin-input"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all tracking-[0.5em] text-center font-mono"
             />
-            {errors.pin && <p className="auth-error">{errors.pin.message}</p>}
+            {errors.pin && <p className="text-danger text-sm mt-1">{errors.pin.message}</p>}
           </div>
 
-          <div className="auth-field">
-            <label>New Password</label>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
             <input
               type="password"
               {...register('newPassword')}
-              className="auth-input"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
             />
-            {errors.newPassword && <p className="auth-error">{errors.newPassword.message}</p>}
+            {errors.newPassword && <p className="text-danger text-sm mt-1">{errors.newPassword.message}</p>}
           </div>
-          <div className="auth-field">
-            <label>Confirm Password</label>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
             <input
               type="password"
               {...register('confirmPassword')}
-              className="auth-input"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
             />
-            {errors.confirmPassword && <p className="auth-error">{errors.confirmPassword.message}</p>}
+            {errors.confirmPassword && <p className="text-danger text-sm mt-1">{errors.confirmPassword.message}</p>}
           </div>
 
-          <button type="submit" disabled={loading} className="auth-btn">
+          <button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary-hover text-white font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50">
             {loading ? 'Resetting...' : 'Reset Password'}
           </button>
 
-          <div className="auth-link">
-            <Link to="/forgot-password" className="auth-back-link">&larr; Get new PIN</Link>
+          <div className="text-sm text-center mt-4 text-gray-600">
+            <Link to="/forgot-password" className="text-primary font-semibold hover:underline">&larr; Get new PIN</Link>
           </div>
         </form>
       </div>
