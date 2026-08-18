@@ -43,71 +43,52 @@ export default function PaymentVerify() {
   const success = status === 'SUCCESS';
 
   return (
-    <div style={containerStyle}>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-8 text-center">
       {error ? (
         <>
           <ErrorMessage message={error} />
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-            <Link to="/checkout" style={btnPrimary}>Back to Checkout</Link>
-            <Link to="/orders" style={btnSecondary}>My Orders</Link>
+          <div className="flex gap-4 mt-8">
+            <Link to="/checkout" className="px-8 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-hover transition-colors">
+              Back to Checkout
+            </Link>
+            <Link to="/orders" className="px-8 py-3 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary/5 transition-colors">
+              My Orders
+            </Link>
           </div>
         </>
       ) : success ? (
         <>
-          <div style={{ fontSize: '4rem', color: '#27ae60' }}>&#10003;</div>
-          <h1 style={{ margin: '1rem 0 0.5rem' }}>Payment Successful!</h1>
-          <p style={{ color: '#666', fontSize: '1.1rem' }}>
+          <div className="text-6xl text-success mb-4">&#10003;</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
+          <p className="text-gray-500 text-lg">
             Your order has been placed and payment received.
           </p>
           {orderId && (
-            <p style={{ margin: '0.5rem 0', fontSize: '0.95rem', color: '#888' }}>
+            <p className="mt-2 text-sm text-gray-400">
               Order ID: <strong>{orderId}</strong>
             </p>
           )}
-          <p style={{ margin: '2rem 0 0', color: '#888' }}>
+          <p className="mt-8 text-gray-400">
             Redirecting you to the home page...
           </p>
         </>
       ) : (
         <>
-          <div style={{ fontSize: '4rem', color: '#e74c3c' }}>&#10007;</div>
-          <h1 style={{ margin: '1rem 0 0.5rem' }}>Payment Not Completed</h1>
-          <p style={{ color: '#666', fontSize: '1.1rem' }}>
+          <div className="text-6xl text-danger mb-4">&#10007;</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Not Completed</h1>
+          <p className="text-gray-500 text-lg">
             Your payment was not completed. Your order is still pending.
           </p>
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-            <Link to="/checkout" style={btnPrimary}>Try Again</Link>
-            <Link to="/products" style={btnSecondary}>Continue Shopping</Link>
+          <div className="flex gap-4 mt-8">
+            <Link to="/checkout" className="px-8 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-hover transition-colors">
+              Try Again
+            </Link>
+            <Link to="/products" className="px-8 py-3 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary/5 transition-colors">
+              Continue Shopping
+            </Link>
           </div>
         </>
       )}
     </div>
   );
 }
-
-const containerStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  minHeight: '60vh',
-  padding: '2rem',
-  textAlign: 'center',
-};
-const btnPrimary = {
-  padding: '0.75rem 2rem',
-  background: '#667eea',
-  color: '#fff',
-  borderRadius: '8px',
-  textDecoration: 'none',
-  fontWeight: 600,
-};
-const btnSecondary = {
-  padding: '0.75rem 2rem',
-  background: '#fff',
-  color: '#667eea',
-  border: '2px solid #667eea',
-  borderRadius: '8px',
-  textDecoration: 'none',
-  fontWeight: 600,
-};
