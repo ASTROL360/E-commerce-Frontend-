@@ -18,13 +18,6 @@ const schema = z.object({
   description: z.string().optional(),
 });
 
-const EMPTY_VARIANTS = [
-  { colorName: '', imageUrl: '' },
-  { colorName: '', imageUrl: '' },
-  { colorName: '', imageUrl: '' },
-  { colorName: '', imageUrl: '' },
-];
-
 export default function AdminProductForm() {
   const { id } = useParams();
   const isEditing = Boolean(id);
@@ -32,9 +25,8 @@ export default function AdminProductForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState([]);
-  const [uploading, setUploading] = useState({ main: false, variants: {} });
+  const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
-  const [colorVariants, setColorVariants] = useState(EMPTY_VARIANTS);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
@@ -61,9 +53,6 @@ export default function AdminProductForm() {
       productService.getById(id).then((res) => {
         const p = unwrap(res);
         if (p) {
-          const loaded = (p.colorVariants || [])
-            .filter((v) => v && v.imageUrl)
-            .map((v) => ({ colorName: v.colorName || '', imageUrl: v.imageUrl || '' }));
           reset({
             name: p.name || '',
             price: p.price || '',
@@ -72,40 +61,22 @@ export default function AdminProductForm() {
             description: p.description || '',
           });
           setImageUrl(p.imageUrl || '');
-          setColorVariants([...loaded, ...EMPTY_VARIANTS].slice(0, 4));
         }
       }).catch(() => setError('Failed to load product')).finally(() => setLoading(false));
     }
   }, [id, isEditing, reset]);
 
-  const handleVariantChange = (index, field, value) => {
-    setColorVariants((prev) => prev.map((v, i) => (i === index ? { ...v, [field]: value } : v)));
-  };
-
-  const handleMainImageChange = async (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading((prev) => ({ ...prev, main: true }));
+    setUploading(true);
     try {
       const url = await uploadToCloudinary(file);
       setImageUrl(url);
     } catch {
       setError('Failed to upload image');
     } finally {
-      setUploading((prev) => ({ ...prev, main: false }));
-    }
-  };
-
-  const handleVariantImageChange = async (index, file) => {
-    if (!file) return;
-    setUploading((prev) => ({ ...prev, variants: { ...prev.variants, [index]: true } }));
-    try {
-      const url = await uploadToCloudinary(file);
-      handleVariantChange(index, 'imageUrl', url);
-    } catch {
-      setError('Failed to upload image');
-    } finally {
-      setUploading((prev) => ({ ...prev, variants: { ...prev.variants, [index]: false } }));
+      setUploading(false);
     }
   };
 
@@ -118,9 +89,6 @@ export default function AdminProductForm() {
       stockQuantity: Number(data.stockQuantity),
       categoryId: data.categoryId ? Number(data.categoryId) : null,
       imageUrl,
-      colorVariants: colorVariants
-        .filter((v) => v.imageUrl.trim())
-        .map((v) => ({ colorName: v.colorName.trim(), imageUrl: v.imageUrl.trim() })),
     };
 
     setLoading(true);
@@ -132,7 +100,9 @@ export default function AdminProductForm() {
       }
       navigate('/admin/products');
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to save product');
+      const body = err.response?.data;
+      const msg = (typeof body === 'string' && body) || body?.message || (body?.errors && body.errors.join(', ')) || err.message || 'Failed to save product';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -181,8 +151,8 @@ export default function AdminProductForm() {
 
         <div className="admin-product-form-field">
           <label>Product Image</label>
-          <input type="file" accept="image/*" onChange={handleMainImageChange} className="admin-product-form-file" disabled={uploading.main} />
-          {uploading.main && <p className="admin-product-form-hint">Uploading...</p>}
+          <input type="file" accept="image/*" onChange={handleImageChange} className="admin-product-form-file" disabled={uploading} />
+          {uploading && <p className="admin-product-form-hint">Uploading...</p>}
           {imageUrl ? (
             <div className="admin-product-form-preview-row">
               <img src={imageUrl} alt="Product" className="admin-product-form-main-preview" />
@@ -201,36 +171,6 @@ export default function AdminProductForm() {
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
-        </div>
-
-        <div className="admin-product-form-field">
-          <label>Color Variants (up to 4 colors)</label>
-          <p className="admin-product-form-variant-hint">
-            Add a color name and upload an image for each color of this product.
-          </p>
-          {colorVariants.map((variant, index) => (
-            <div key={index} className="admin-product-form-variant-row">
-              <input
-                placeholder="Color (e.g. Black)"
-                value={variant.colorName}
-                onChange={(e) => handleVariantChange(index, 'colorName', e.target.value)}
-                className="admin-product-form-variant-color"
-              />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleVariantImageChange(index, e.target.files?.[0])}
-                className="admin-product-form-variant-file"
-                disabled={uploading.variants[index]}
-              />
-              {uploading.variants[index] && <span className="admin-product-form-variant-uploading">Uploading...</span>}
-              {variant.imageUrl ? (
-                <img src={variant.imageUrl} alt={variant.colorName || `Variant ${index + 1}`} className="admin-product-form-variant-preview" />
-              ) : (
-                <div className="admin-product-form-variant-placeholder">No image</div>
-              )}
-            </div>
-          ))}
         </div>
 
         <div className="admin-product-form-field">
