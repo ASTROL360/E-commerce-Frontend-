@@ -6,7 +6,6 @@ import { z } from 'zod';
 import addressService from '../../services/addressService';
 import { unwrap } from '../../services/api';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
-import './userPages.css';
 
 const addressSchema = z.object({
   label: z.string().optional().or(z.literal('')),
@@ -23,7 +22,6 @@ const addressSchema = z.object({
 
 export default function Addresses() {
   const [addresses, setAddresses] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -136,18 +134,18 @@ export default function Addresses() {
   };
 
   return (
-    <div className="addresses-page">
-      <div className="addresses-header">
-        <h1>My Addresses</h1>
-        <button onClick={startAdd} className="addresses-btn">Add New Address</button>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">My Addresses</h1>
+        <button onClick={startAdd} className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 text-sm">Add New Address</button>
       </div>
 
-      {error && <p className="addresses-error">{error}</p>}
+      {error && <p className="text-danger mb-4">{error}</p>}
 
       {showForm && (
-        <form onSubmit={handleSubmit(onSubmit)} className="addresses-form">
-          <h3>{editingId ? 'Edit Address' : 'New Address'}</h3>
-          <div className="addresses-grid">
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{editingId ? 'Edit Address' : 'New Address'}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             {[
               { name: 'label', label: 'Label' },
               { name: 'fullName', label: 'Full Name' },
@@ -159,46 +157,50 @@ export default function Addresses() {
               { name: 'country', label: 'Country' },
               { name: 'phone', label: 'Phone' },
             ].map((f) => (
-              <div key={f.name} className="addresses-field">
-                <label>{f.label}</label>
+              <div key={f.name}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
                 <input
                   {...register(f.name)}
                   type="text"
-                  className="addresses-input"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                 />
                 {errors[f.name] && (
-                  <p className="addresses-field-error">{errors[f.name].message}</p>
+                  <p className="text-danger text-xs mt-1">{errors[f.name].message}</p>
                 )}
               </div>
             ))}
           </div>
-          <label className="addresses-checkbox-label">
-            <input type="checkbox" {...register('isDefault')} />
+          <label className="flex items-center gap-2 text-sm text-gray-700 mb-4 cursor-pointer">
+            <input type="checkbox" {...register('isDefault')} className="rounded border-gray-300 text-primary focus:ring-primary" />
             Set as default address
           </label>
-          <div className="addresses-form-actions">
-            <button type="submit" className="addresses-save-btn">Save</button>
-            <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="addresses-cancel-btn">Cancel</button>
+          <div className="flex gap-3">
+            <button type="submit" className="bg-success text-white px-6 py-2.5 rounded-lg font-medium text-sm hover:opacity-90">Save</button>
+            <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="text-gray-600 hover:text-gray-900 px-6 py-2.5 text-sm">Cancel</button>
           </div>
         </form>
       )}
 
-      <div className="addresses-list">
+      <div className="space-y-3">
         {addresses.map((addr) => (
-          <div key={addr.id} className="addresses-card">
-            <div className="addresses-card-body">
-              <strong>{addr.label}</strong> - {addr.fullName}
-              {addr.isDefault && <span className="addresses-default-badge">Default</span>}
-              <p className="addresses-card-info">
+          <div key={addr.id} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-1">
+                <strong className="text-gray-900">{addr.label}</strong>
+                <span className="text-gray-400">-</span>
+                <span className="text-gray-700">{addr.fullName}</span>
+                {addr.isDefault && <span className="bg-primary text-white text-xs px-2 py-0.5 rounded-full">Default</span>}
+              </div>
+              <p className="text-sm text-gray-500">
                 {addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}<br />
                 {addr.city}, {addr.state} {addr.postalCode}<br />
                 {addr.country}
                 {addr.phone && <><br />{addr.phone}</>}
               </p>
             </div>
-            <div className="addresses-card-actions">
-              <button onClick={() => handleEdit(addr)} className="addresses-edit-btn">Edit</button>
-              <button onClick={() => handleDelete(addr.id)} className="addresses-delete-btn">Delete</button>
+            <div className="flex gap-2">
+              <button onClick={() => handleEdit(addr)} className="bg-primary text-white px-3 py-1 rounded text-sm">Edit</button>
+              <button onClick={() => handleDelete(addr.id)} className="bg-danger text-white px-3 py-1 rounded text-sm">Delete</button>
             </div>
           </div>
         ))}
