@@ -40,7 +40,7 @@ export default function Dashboard() {
   if (loading) return <p className="text-gray-500 p-6 lg:p-8">Loading dashboard...</p>;
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
       {error && <div className="mb-4"><ErrorMessage message={error} /></div>}
 
@@ -58,7 +58,7 @@ export default function Dashboard() {
       </div>
 
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Orders</h2>
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="overflow-x-auto bg-white rounded-xl border border-gray-200">
         <table className="min-w-full divide-y divide-gray-200">
           <thead>
             <tr>
