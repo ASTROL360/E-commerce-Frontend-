@@ -4,9 +4,9 @@ export default function PasswordInput({ value, onChange, label, required, placeh
   const [show, setShow] = useState(false)
 
   return (
-    <div style={fieldStyle}>
-      {label && <label>{label}</label>}
-      <div style={wrapperStyle}>
+    <div className="mb-4">
+      {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
+      <div className="relative flex items-center">
         <input
           type={show ? 'text' : 'password'}
           value={value}
@@ -14,13 +14,13 @@ export default function PasswordInput({ value, onChange, label, required, placeh
           required={required}
           placeholder={placeholder}
           name={name}
-          style={inputStyle}
+          className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all mt-1"
           {...rest}
         />
         <button
           type="button"
           onClick={() => setShow((s) => !s)}
-          style={toggleStyle}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 mt-0.5"
           aria-label={show ? 'Hide password' : 'Show password'}
           tabIndex={-1}
         >
@@ -48,16 +48,4 @@ function EyeOffIcon() {
       <line x1="1" y1="1" x2="23" y2="23" />
     </svg>
   )
-}
-
-const fieldStyle = { marginBottom: '1rem' }
-const wrapperStyle = { position: 'relative', display: 'flex', alignItems: 'center' }
-const inputStyle = {
-  width: '100%', padding: '0.6rem 2.5rem 0.6rem 1rem', border: '1px solid #ccc',
-  borderRadius: '6px', fontSize: '1rem', marginTop: '0.25rem', boxSizing: 'border-box'
-}
-const toggleStyle = {
-  position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)',
-  background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem',
-  display: 'flex', alignItems: 'center', marginTop: '0.125rem'
 }
