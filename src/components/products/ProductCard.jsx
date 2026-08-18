@@ -30,37 +30,51 @@ export default function ProductCard({ product }) {
   };
 
   return (
-    <div className="product-card">
-      <Link to={`/products/${product.id}`} className="product-card-link">
-        <div className="product-card-image">
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 group">
+      <Link to={`/products/${product.id}`} className="block">
+        <div className="aspect-square overflow-hidden bg-gray-100 relative">
           {primaryImage ? (
-            <img src={getCloudinaryUrl(primaryImage, 400)} alt={product.name} />
+            <img
+              src={getCloudinaryUrl(primaryImage, 400)}
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
           ) : (
-            <div className="product-card-placeholder">No Image</div>
+            <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">No Image</div>
           )}
-          {outOfStock && <span className="out-of-stock-badge">Out of Stock</span>}
+          {outOfStock && (
+            <span className="absolute top-3 left-3 bg-gray-900 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+              Out of Stock
+            </span>
+          )}
         </div>
 
-        <div className="product-card-info">
+        <div className="p-4">
           {(product.categoryName || product.category) && (
-            <span className="product-card-category">{product.categoryName || product.category?.name || product.category}</span>
+            <span className="text-xs font-medium text-primary uppercase tracking-wider">
+              {product.categoryName || product.category?.name || product.category}
+            </span>
           )}
-          <h3 className="product-card-name">{product.name}</h3>
-          <p className="product-card-price">₦{product.price?.toFixed(2)}</p>
+          <h3 className="text-sm font-semibold text-gray-900 mt-1 line-clamp-2">{product.name}</h3>
+          <p className="text-lg font-bold text-gray-900 mt-1">₦{product.price?.toFixed(2)}</p>
         </div>
       </Link>
 
       {!isAdmin && (
-        <>
+        <div className="px-4 pb-4">
           <button
-            className={`btn btn-primary product-card-btn ${outOfStock ? 'btn-disabled' : ''}`}
+            className={`w-full mt-3 text-sm font-medium py-2 rounded-lg transition-colors ${
+              outOfStock
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-primary hover:bg-primary-hover text-white'
+            }`}
             onClick={handleAddToCart}
             disabled={outOfStock}
           >
             {outOfStock ? 'Out of Stock' : 'Add to Cart'}
           </button>
-          {addError && <span className="product-card-error">{addError}</span>}
-        </>
+          {addError && <span className="block text-danger text-xs mt-1 text-center">{addError}</span>}
+        </div>
       )}
     </div>
   );
