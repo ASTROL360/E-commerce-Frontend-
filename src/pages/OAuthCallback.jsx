@@ -27,15 +27,12 @@ export default function OAuthCallback() {
   }, [searchParams, loginWithToken, navigate]);
 
   return (
-    <div style={containerStyle}>
-      <div style={formCardStyle}>
-        <h1>{error ? 'Sign-in Failed' : 'Signing You In...'}</h1>
-        {error && <p style={{ color: 'red', fontSize: '0.9rem' }}>{error}</p>}
-        {!error && <p style={{ color: '#666' }}>Please wait, completing your Google login...</p>}
+    <div className="flex justify-center items-center min-h-[80vh] p-8">
+      <div className="w-full max-w-[420px] p-8 bg-white rounded-lg shadow-lg text-center">
+        <h1 className="text-xl font-bold text-gray-900 mb-2">{error ? 'Sign-in Failed' : 'Signing You In...'}</h1>
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {!error && <p className="text-gray-500">Please wait, completing your Google login...</p>}
       </div>
     </div>
   );
 }
-
-const containerStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '2rem' };
-const formCardStyle = { width: '100%', maxWidth: 420, padding: '2rem', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', textAlign: 'center' };
