@@ -28,7 +28,7 @@ export default function AdminOrderDetail() {
   if (loading) return <Loading />;
   if (error || !order) {
     return (
-      <div className="max-w-3xl mx-auto p-6 lg:p-8">
+      <div className="max-w-3xl mx-auto p-4 lg:p-6">
         <ErrorMessage message={error || 'Order not found'} />
         <Link to="/admin/orders" className="text-primary hover:underline mt-4 inline-block">&larr; Back to Orders</Link>
       </div>
@@ -50,7 +50,7 @@ export default function AdminOrderDetail() {
   const ship = order.shippingAddress || {};
 
   return (
-    <div className="max-w-3xl mx-auto p-6 lg:p-8">
+    <div className="max-w-3xl mx-auto p-4 lg:p-6">
       <Link to="/admin/orders" className="text-primary hover:underline inline-block mb-4">&larr; Back to Orders</Link>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Order {order.id}</h1>
 
@@ -68,7 +68,7 @@ export default function AdminOrderDetail() {
         <h3 className="font-semibold text-gray-900 mb-3">Update Status</h3>
         {success && <p className="bg-green-50 text-green-700 rounded-lg p-3 text-sm mb-3">{success}</p>}
         {error && <ErrorMessage message={error} />}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <select value={status} onChange={(e) => setStatus(e.target.value)} className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
             {['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
               <option key={s} value={s}>{s}</option>
